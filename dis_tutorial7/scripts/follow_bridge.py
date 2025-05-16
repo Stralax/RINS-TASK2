@@ -276,5 +276,4 @@ if __name__ == '__main__':
     main()
 
 
-# git config --global user.name "Stralax"
-# git config --global user.email "strahinjadjordjevic2003@gmail.com"
+
