@@ -1,0 +1,6 @@
+Invoking command in '/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake /home/beta/RINS-TASK2/dis_tutorial7 -DCMAKE_INSTALL_PREFIX=/home/beta/RINS-TASK2/dis_tutorial7/install/dis_tutorial7
+Invoked command in '/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake /home/beta/RINS-TASK2/dis_tutorial7 -DCMAKE_INSTALL_PREFIX=/home/beta/RINS-TASK2/dis_tutorial7/install/dis_tutorial7
+Invoking command in '/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7 -- -j16 -l16
+Invoked command in '/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7 -- -j16 -l16
+Invoking command in '/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7
+Invoked command in '/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7

@@ -70,7 +70,8 @@ def generate_launch_description():
     ignition = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([ignition_launch]),
         launch_arguments=[
-            ('world', LaunchConfiguration('world'))
+            ('world', LaunchConfiguration('world')),
+            ('use_sim_time', 'true')
         ]
     )
 
@@ -82,7 +83,8 @@ def generate_launch_description():
             ('x', LaunchConfiguration('x')),
             ('y', LaunchConfiguration('y')),
             ('z', LaunchConfiguration('z')),
-            ('yaw', LaunchConfiguration('yaw'))]
+            ('yaw', LaunchConfiguration('yaw')),
+            ('use_sim_time', 'true')]
     )
 
     # Localization

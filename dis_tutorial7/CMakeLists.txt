@@ -29,6 +29,7 @@ install(DIRECTORY
 install(PROGRAMS
   scripts/arm_mover_actions.py
 #  scripts/robot_commander.py
+  scripts/follow_bridge.py
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

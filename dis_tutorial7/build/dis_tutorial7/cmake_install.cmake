@@ -1,8 +1,8 @@
-# Install script for directory: /home/beta/Vaje7/dis_tutorial7
+# Install script for directory: /home/beta/RINS-TASK2/dis_tutorial7
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/beta/Vaje7/dis_tutorial7/install/dis_tutorial7")
+  set(CMAKE_INSTALL_PREFIX "/home/beta/RINS-TASK2/dis_tutorial7/install/dis_tutorial7")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -44,23 +44,26 @@ endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7/" TYPE DIRECTORY FILES
-    "/home/beta/Vaje7/dis_tutorial7/launch"
-    "/home/beta/Vaje7/dis_tutorial7/meshes"
-    "/home/beta/Vaje7/dis_tutorial7/urdf"
-    "/home/beta/Vaje7/dis_tutorial7/config"
+    "/home/beta/RINS-TASK2/dis_tutorial7/launch"
+    "/home/beta/RINS-TASK2/dis_tutorial7/meshes"
+    "/home/beta/RINS-TASK2/dis_tutorial7/urdf"
+    "/home/beta/RINS-TASK2/dis_tutorial7/config"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/dis_tutorial7" TYPE PROGRAM FILES "/home/beta/Vaje7/dis_tutorial7/scripts/arm_mover_actions.py")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/dis_tutorial7" TYPE PROGRAM FILES
+    "/home/beta/RINS-TASK2/dis_tutorial7/scripts/arm_mover_actions.py"
+    "/home/beta/RINS-TASK2/dis_tutorial7/scripts/follow_bridge.py"
+    )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ament_index/resource_index/package_run_dependencies" TYPE FILE FILES "/home/beta/Vaje7/dis_tutorial7/build/dis_tutorial7/ament_cmake_index/share/ament_index/resource_index/package_run_dependencies/dis_tutorial7")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ament_index/resource_index/package_run_dependencies" TYPE FILE FILES "/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/ament_cmake_index/share/ament_index/resource_index/package_run_dependencies/dis_tutorial7")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ament_index/resource_index/parent_prefix_path" TYPE FILE FILES "/home/beta/Vaje7/dis_tutorial7/build/dis_tutorial7/ament_cmake_index/share/ament_index/resource_index/parent_prefix_path/dis_tutorial7")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ament_index/resource_index/parent_prefix_path" TYPE FILE FILES "/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/ament_cmake_index/share/ament_index/resource_index/parent_prefix_path/dis_tutorial7")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
@@ -68,7 +71,7 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7/environment" TYPE FILE FILES "/home/beta/Vaje7/dis_tutorial7/build/dis_tutorial7/ament_cmake_environment_hooks/ament_prefix_path.dsv")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7/environment" TYPE FILE FILES "/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/ament_cmake_environment_hooks/ament_prefix_path.dsv")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
@@ -76,42 +79,42 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7/environment" TYPE FILE FILES "/home/beta/Vaje7/dis_tutorial7/build/dis_tutorial7/ament_cmake_environment_hooks/path.dsv")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7/environment" TYPE FILE FILES "/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/ament_cmake_environment_hooks/path.dsv")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/Vaje7/dis_tutorial7/build/dis_tutorial7/ament_cmake_environment_hooks/local_setup.bash")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/ament_cmake_environment_hooks/local_setup.bash")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/Vaje7/dis_tutorial7/build/dis_tutorial7/ament_cmake_environment_hooks/local_setup.sh")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/ament_cmake_environment_hooks/local_setup.sh")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/Vaje7/dis_tutorial7/build/dis_tutorial7/ament_cmake_environment_hooks/local_setup.zsh")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/ament_cmake_environment_hooks/local_setup.zsh")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/Vaje7/dis_tutorial7/build/dis_tutorial7/ament_cmake_environment_hooks/local_setup.dsv")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/ament_cmake_environment_hooks/local_setup.dsv")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/Vaje7/dis_tutorial7/build/dis_tutorial7/ament_cmake_environment_hooks/package.dsv")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/ament_cmake_environment_hooks/package.dsv")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ament_index/resource_index/packages" TYPE FILE FILES "/home/beta/Vaje7/dis_tutorial7/build/dis_tutorial7/ament_cmake_index/share/ament_index/resource_index/packages/dis_tutorial7")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ament_index/resource_index/packages" TYPE FILE FILES "/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/ament_cmake_index/share/ament_index/resource_index/packages/dis_tutorial7")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7/cmake" TYPE FILE FILES
-    "/home/beta/Vaje7/dis_tutorial7/build/dis_tutorial7/ament_cmake_core/dis_tutorial7Config.cmake"
-    "/home/beta/Vaje7/dis_tutorial7/build/dis_tutorial7/ament_cmake_core/dis_tutorial7Config-version.cmake"
+    "/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/ament_cmake_core/dis_tutorial7Config.cmake"
+    "/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/ament_cmake_core/dis_tutorial7Config-version.cmake"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/Vaje7/dis_tutorial7/package.xml")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/RINS-TASK2/dis_tutorial7/package.xml")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)
@@ -122,5 +125,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/beta/Vaje7/dis_tutorial7/build/dis_tutorial7/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
