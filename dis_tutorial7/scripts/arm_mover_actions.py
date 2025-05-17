@@ -369,5 +369,3 @@ if __name__ == '__main__':
 
 
 
-git config --global user.name "Stralax"
-git config --global user.email "strahinjadjorjevic2003@gmail.com"
