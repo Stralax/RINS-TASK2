@@ -22,6 +22,14 @@ import os
 import tf2_ros
 from geometry_msgs.msg import TransformStamped
 
+
+# primer uporabe za visino uzeti z kot fiknso z: -99.3
+# ros2 topic pub --once /target_point geometry_msgs/msg/Point "{x: 1.61, y: 0.0, z: -99.3}"
+
+
+
+
+
 # QoS profile for reliable communication
 qos_profile = QoSProfile(
           durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
@@ -45,12 +53,14 @@ class ArmMoverAction(Node):
             10
         )
 
+        self.should_save_image = False
+
         # TF2 setup
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
         self.robot_base_frame = "base_link"
         self.camera_frame = "top_camera_rgb_camera_optical_frame"
-        self.world_frame = "map"
+        self.world_frame = "odom"
 
         # Robot arm properties
         self.link_lengths = [0.1, 0.2, 0.2, 0.1]  # Adjust these based on your robot's dimensions
@@ -150,6 +160,9 @@ class ArmMoverAction(Node):
         """Callback for receiving target point in world coordinates"""
         self.get_logger().info(f"Received target point: x={msg.x}, y={msg.y}, z={msg.z}")
         
+        # Set flag to save image only if z coordinate is -99.3
+        self.should_save_image = (abs(msg.z - (-99.3)) < 0.1)  # Using small epsilon for float comparison
+        
         # Calculate look-at angles
         joint_positions = self.calculate_look_at_angles(msg.x, msg.y, msg.z)
         
@@ -212,7 +225,10 @@ class ArmMoverAction(Node):
             self.get_logger().info(f'Arm controller says GOAL FAILED: {status}')
         else:
             self.get_logger().info(f'Arm controller says GOAL REACHED.')
-            self.save_camera_image()
+            # Only save image if flag is set
+            if self.should_save_image:
+                self.save_camera_image()
+                self.should_save_image = False  # Reset flag
 
         self.executing_command = False
 
@@ -316,39 +332,65 @@ class ArmMoverAction(Node):
         Returns joint positions or None if calculation fails
         """
         try:
-            # Get current camera transform in world frame
-            camera_tf = self.get_camera_transform()
-            if camera_tf is None:
-                self.get_logger().error("Failed to get camera transform")
+            # Get current transform from odom to base_link
+            try:
+                base_tf = self.tf_buffer.lookup_transform(
+                    self.world_frame,
+                    self.robot_base_frame,
+                    rclpy.time.Time(),
+                    timeout=rclpy.duration.Duration(seconds=1.0))
+            except Exception as e:
+                self.get_logger().error(f"Failed to get base transform: {str(e)}")
                 return None
 
-            # Get camera position and orientation
-            cam_x = camera_tf.transform.translation.x
-            cam_y = camera_tf.transform.translation.y
-            cam_z = camera_tf.transform.translation.z
-            
-            # Debug output
-            self.get_logger().info(f"Camera position: x={cam_x:.2f}, y={cam_y:.2f}, z={cam_z:.2f}")
-            self.get_logger().info(f"Target position: x={target_x:.2f}, y={target_y:.2f}, z={target_z:.2f}")
+            # Transform target point to base_link frame
+            target_in_base = Point()
+            target_in_base.x = target_x - base_tf.transform.translation.x
+            target_in_base.y = target_y - base_tf.transform.translation.y
+            target_in_base.z = target_z #- base_tf.transform.translation.z
 
-            # Vector from camera to target
-            dx = target_x - cam_x
-            dy = target_y - cam_y
-            dz = target_z - cam_z
+            # Account for robot rotation (yaw only for simplicity)
+            robot_yaw = math.atan2(
+                2.0 * (base_tf.transform.rotation.w * base_tf.transform.rotation.z + 
+                    base_tf.transform.rotation.x * base_tf.transform.rotation.y),
+                1.0 - 2.0 * (base_tf.transform.rotation.y**2 + base_tf.transform.rotation.z**2))
             
-            # Debug output
-            self.get_logger().info(f"Vector to target: dx={dx:.2f}, dy={dy:.2f}, dz={dz:.2f}")
+            # Rotate target point to align with robot's forward direction
+            dx = math.cos(robot_yaw) * target_in_base.x + math.sin(robot_yaw) * target_in_base.y
+            dy = -math.sin(robot_yaw) * target_in_base.x + math.cos(robot_yaw) * target_in_base.y
+            dz = target_in_base.z
 
-            # 1. Calculate base joint rotation (pan)
-            pan = math.atan2(dy, dx)
+            # Get current camera position relative to base
+            try:
+                cam_tf = self.tf_buffer.lookup_transform(
+                    self.robot_base_frame,
+                    self.camera_frame,
+                    rclpy.time.Time(),
+                    timeout=rclpy.duration.Duration(seconds=1.0))
+            except Exception as e:
+                self.get_logger().error(f"Failed to get camera transform: {str(e)}")
+                return None
+
+            # Vector from camera to target (in base frame)
+            dx_cam_to_target = -dx - cam_tf.transform.translation.x
+            dy_cam_to_target = -dy - cam_tf.transform.translation.y
+            dz_cam_to_target = dz - cam_tf.transform.translation.z
+
+            # Debug output
+            self.get_logger().info(f"Camera to target vector: dx={dx_cam_to_target:.2f}, dy={dy_cam_to_target:.2f}, dz={dz_cam_to_target:.2f}")
+
+            # 1. Calculate base joint rotation (pan) - REVERSED DIRECTION
+            pan = math.atan2(-dy_cam_to_target, -dx_cam_to_target)
             
-            # 2. Calculate shoulder joint (tilt)
-            distance_xy = math.sqrt(dx**2 + dy**2)
-            tilt = math.atan2(dz, distance_xy)
+            # 2. Calculate shoulder joint (tilt) - REVERSED DIRECTION
+            distance_xy = math.sqrt(dx_cam_to_target**2 + dy_cam_to_target**2)
+            tilt = math.atan2(-dz_cam_to_target, distance_xy)
             
-            # 3. Keep elbow and wrist at reasonable fixed angles
-            elbow = 0.5  # Slightly bent
-            wrist = 1.2  # Slightly angled down
+            # 3. Calculate elbow to maintain camera orientation
+            elbow = -1.8 #tilt * -1  # (1 ali -1) Changed sign #STELOVANJE
+            
+            # 4. Calculate wrist to keep camera level
+            wrist = tilt #-elbow + tilt  # Adjusted calculation
             
             # Debug output
             self.get_logger().info(f"Calculated angles: pan={pan:.2f}, tilt={tilt:.2f}, elbow={elbow:.2f}, wrist={wrist:.2f}")
@@ -366,3 +408,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+

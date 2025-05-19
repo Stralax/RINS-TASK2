@@ -14,6 +14,9 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from std_msgs.msg import String
 import time
+import os
+from fpdf import FPDF  # For PDF generation
+from datetime import datetime
 
 class BridgeSegmenter:
     def __init__(self, node):
@@ -131,6 +134,53 @@ class BridgeFollower(Node):
         self.red_spot_area = 0
         self.task_complete = False
 
+        # Image saving setup
+        self.image_save_folder = os.path.expanduser("~/RINS-TASK2/img")
+        os.makedirs(self.image_save_folder, exist_ok=True)
+        self.should_save_image = False
+        self.images_saved = False  # Flag to track if we've already saved images
+
+    def create_images_pdf(self):
+        """Create a PDF file from all images in the /img folder"""
+        try:
+            # Get list of all image files in the directory
+            image_files = [f for f in os.listdir(self.image_save_folder) 
+                         if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+            
+            if not image_files:
+                self.get_logger().warn("No images found to create PDF")
+                return
+
+            # Sort images by name (which includes timestamp)
+            image_files.sort()
+            
+            # Create PDF
+            pdf = FPDF()
+            
+            for img_file in image_files:
+                img_path = os.path.join(self.image_save_folder, img_file)
+                
+                # Add a page for each image
+                pdf.add_page()
+                
+                # Add image title (filename without extension)
+                title = os.path.splitext(img_file)[0]
+                pdf.set_font("Arial", size=12)
+                pdf.cell(200, 10, txt=title, ln=1, align='C')
+                
+                # Add the image
+                pdf.image(img_path, x=10, y=20, w=180)
+            
+            # Save PDF with timestamp
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            pdf_filename = os.path.join(self.image_save_folder, f"Birds_catalog.pdf")
+            pdf.output(pdf_filename)
+            
+            self.get_logger().info(f"Created PDF with images: {pdf_filename}")
+            
+        except Exception as e:
+            self.get_logger().error(f"Failed to create PDF: {str(e)}")
+
 
     def go_to_start_point(self, x, y, face_x, face_y):
         """Navigate to initial position before bridge following"""
@@ -236,6 +286,7 @@ class BridgeFollower(Node):
                     self.stop_robot()
                     self.going_to_red = False
                     self.task_complete = True
+                    self.create_images_pdf()
                     return
 
                 else:
