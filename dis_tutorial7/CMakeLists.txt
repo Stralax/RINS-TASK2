@@ -18,6 +18,14 @@ find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 
+
+find_package(nav_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(cv_bridge REQUIRED)
+
 install(DIRECTORY
   launch
   meshes
@@ -26,10 +34,18 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}/
 )
 
+install(DIRECTORY scripts/
+        DESTINATION share/${PROJECT_NAME}/scripts
+        FILES_MATCHING PATTERN "*.txt")
+
 install(PROGRAMS
+  scripts/detect_birds.py
   scripts/arm_mover_actions.py
-#  scripts/robot_commander.py
+  #scripts/robot_commander.py
   scripts/follow_bridge.py
+  scripts/bird_classifier.py
+  scripts/detect_people1.py
+  scripts/detect_rings.py
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
