@@ -123,6 +123,7 @@ class DetectFaces(Node):
                                                       self.pointcloud_callback, qos_profile_sensor_data)
         
         self.marker_pub = self.create_publisher(MarkerArray, array_topic, QoSReliabilityPolicy.BEST_EFFORT)
+        # self.marker_pub = self.create_publisher(MarkerArray, marker_topic, QoSReliabilityPolicy.BEST_EFFORT)
         
         self.positions_pub = self.create_publisher(
             PoseArray, 
@@ -289,11 +290,19 @@ class DetectFaces(Node):
             stamp = data.header.stamp
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
             
+            # Get image height to determine lower half
+            img_height = cv_image.shape[0]
+            lower_half_y = img_height // 2
+            
             # Detect people (class 0 in COCO)
             results = self.model.predict(cv_image, imgsz=(256, 320), show=False, verbose=False, classes=[0], device=self.device)
             
             faces = []
             detect_image = cv_image.copy()
+            
+            # Draw a horizontal line showing the lower half boundary
+            cv2.line(detect_image, (0, lower_half_y), (cv_image.shape[1], lower_half_y), 
+                    (0, 255, 0), 2)
             
             for det in results:
                 bbox = det.boxes.xyxy
@@ -309,15 +318,23 @@ class DetectFaces(Node):
                     width = int(box[2] - box[0])
                     height = int(box[3] - box[1])
                     
-                    # Store detection with size information
-                    faces.append((cx, cy, width, height))
-                    
-                    # Visualize detection
-                    detect_image = cv2.rectangle(detect_image, 
+                    # Only consider detections in the lower half of the image
+                    if cy >= lower_half_y:
+                        # Store detection with size information
+                        faces.append((cx, cy, width, height))
+                        
+                        # Visualize detection
+                        detect_image = cv2.rectangle(detect_image, 
                                             (int(box[0]), int(box[1])), 
                                             (int(box[2]), int(box[3])), 
                                             self.detection_color, 2)
-                    detect_image = cv2.circle(detect_image, (cx, cy), 5, self.detection_color, -1)
+                        detect_image = cv2.circle(detect_image, (cx, cy), 5, self.detection_color, -1)
+                    else:
+                        # Draw rejected detection with different color
+                        detect_image = cv2.rectangle(detect_image, 
+                                            (int(box[0]), int(box[1])), 
+                                            (int(box[2]), int(box[3])), 
+                                            (128, 128, 128), 1)  # Gray color for rejected detections
             
             # Store detection in buffer
             self.rgb_buffer.append(RGBDetection(stamp=stamp, faces=faces, image=detect_image))
@@ -334,7 +351,7 @@ class DetectFaces(Node):
                 
         except CvBridgeError as e:
             self.get_logger().error(f"CV Bridge error: {e}")
-    
+
     def pointcloud_callback(self, data):
         """Store point cloud data in buffer"""
         self.pointcloud_buffer.append(PointCloudData(stamp=data.header.stamp, data=data))

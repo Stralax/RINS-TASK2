@@ -1,0 +1,4 @@
+Invoking command in '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/beta/Desktop/RINS-TASK2/build/dis_tutorial7 -- -j16 -l16
+Invoked command in '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/beta/Desktop/RINS-TASK2/build/dis_tutorial7 -- -j16 -l16
+Invoking command in '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/beta/Desktop/RINS-TASK2/build/dis_tutorial7
+Invoked command in '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7' returned '1': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/beta/Desktop/RINS-TASK2/build/dis_tutorial7

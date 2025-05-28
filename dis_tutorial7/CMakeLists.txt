@@ -41,11 +41,12 @@ install(DIRECTORY scripts/
 install(PROGRAMS
   scripts/detect_birds.py
   scripts/arm_mover_actions.py
-  #scripts/robot_commander.py
+  scripts/robot_commander_.py
   scripts/follow_bridge.py
   scripts/bird_classifier.py
   scripts/detect_people1.py
   scripts/detect_rings.py
+  scripts/skeletonized_path.py
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

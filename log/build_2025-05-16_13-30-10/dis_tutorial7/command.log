@@ -1,4 +1,0 @@
-Invoking command in '/home/beta/RINS-TASK2/build/dis_tutorial7': /usr/bin/cmake --build /home/beta/RINS-TASK2/build/dis_tutorial7 -- -j16 -l16
-Invoked command in '/home/beta/RINS-TASK2/build/dis_tutorial7' returned '0': /usr/bin/cmake --build /home/beta/RINS-TASK2/build/dis_tutorial7 -- -j16 -l16
-Invoking command in '/home/beta/RINS-TASK2/build/dis_tutorial7': /usr/bin/cmake --install /home/beta/RINS-TASK2/build/dis_tutorial7
-Invoked command in '/home/beta/RINS-TASK2/build/dis_tutorial7' returned '0': /usr/bin/cmake --install /home/beta/RINS-TASK2/build/dis_tutorial7

@@ -1,0 +1,585 @@
+[0.120s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build']
+[0.120s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=False, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=16, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0x76098107ad70>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x76098107a2f0>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x76098107a2f0>>, mixin_verb=('build',))
+[0.295s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.295s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.295s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.295s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.295s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.296s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.296s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/beta/Desktop/RINS-TASK2'
+[0.296s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.296s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.296s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.296s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.296s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.296s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.297s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.297s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.297s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.337s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.338s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.338s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.338s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.338s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.338s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.338s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.338s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.338s] Level 1:colcon.colcon_core.package_identification:_identify(data) by extensions ['ignore', 'ignore_ament_install']
+[0.338s] Level 1:colcon.colcon_core.package_identification:_identify(data) by extension 'ignore'
+[0.338s] Level 1:colcon.colcon_core.package_identification:_identify(data) by extension 'ignore_ament_install'
+[0.338s] Level 1:colcon.colcon_core.package_identification:_identify(data) by extensions ['colcon_pkg']
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data) by extension 'colcon_pkg'
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data) by extensions ['colcon_meta']
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data) by extension 'colcon_meta'
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data) by extensions ['ros']
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data) by extension 'ros'
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data) by extensions ['cmake', 'python']
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data) by extension 'cmake'
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data) by extension 'python'
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data) by extensions ['python_setup_py']
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data) by extension 'python_setup_py'
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds) by extensions ['ignore', 'ignore_ament_install']
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds) by extension 'ignore'
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds) by extension 'ignore_ament_install'
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds) by extensions ['colcon_pkg']
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds) by extension 'colcon_pkg'
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds) by extensions ['colcon_meta']
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds) by extension 'colcon_meta'
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds) by extensions ['ros']
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds) by extension 'ros'
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds) by extensions ['cmake', 'python']
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds) by extension 'cmake'
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds) by extension 'python'
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds) by extensions ['python_setup_py']
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds) by extension 'python_setup_py'
+[0.339s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/002.Laysan_Albatross) by extensions ['ignore', 'ignore_ament_install']
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/002.Laysan_Albatross) by extension 'ignore'
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/002.Laysan_Albatross) by extension 'ignore_ament_install'
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/002.Laysan_Albatross) by extensions ['colcon_pkg']
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/002.Laysan_Albatross) by extension 'colcon_pkg'
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/002.Laysan_Albatross) by extensions ['colcon_meta']
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/002.Laysan_Albatross) by extension 'colcon_meta'
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/002.Laysan_Albatross) by extensions ['ros']
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/002.Laysan_Albatross) by extension 'ros'
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/002.Laysan_Albatross) by extensions ['cmake', 'python']
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/002.Laysan_Albatross) by extension 'cmake'
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/002.Laysan_Albatross) by extension 'python'
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/002.Laysan_Albatross) by extensions ['python_setup_py']
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/002.Laysan_Albatross) by extension 'python_setup_py'
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/012.Yellow_headed_Blackbird) by extensions ['ignore', 'ignore_ament_install']
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/012.Yellow_headed_Blackbird) by extension 'ignore'
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/012.Yellow_headed_Blackbird) by extension 'ignore_ament_install'
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/012.Yellow_headed_Blackbird) by extensions ['colcon_pkg']
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/012.Yellow_headed_Blackbird) by extension 'colcon_pkg'
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/012.Yellow_headed_Blackbird) by extensions ['colcon_meta']
+[0.340s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/012.Yellow_headed_Blackbird) by extension 'colcon_meta'
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/012.Yellow_headed_Blackbird) by extensions ['ros']
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/012.Yellow_headed_Blackbird) by extension 'ros'
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/012.Yellow_headed_Blackbird) by extensions ['cmake', 'python']
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/012.Yellow_headed_Blackbird) by extension 'cmake'
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/012.Yellow_headed_Blackbird) by extension 'python'
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/012.Yellow_headed_Blackbird) by extensions ['python_setup_py']
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/012.Yellow_headed_Blackbird) by extension 'python_setup_py'
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/014.Indigo_Bunting) by extensions ['ignore', 'ignore_ament_install']
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/014.Indigo_Bunting) by extension 'ignore'
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/014.Indigo_Bunting) by extension 'ignore_ament_install'
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/014.Indigo_Bunting) by extensions ['colcon_pkg']
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/014.Indigo_Bunting) by extension 'colcon_pkg'
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/014.Indigo_Bunting) by extensions ['colcon_meta']
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/014.Indigo_Bunting) by extension 'colcon_meta'
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/014.Indigo_Bunting) by extensions ['ros']
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/014.Indigo_Bunting) by extension 'ros'
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/014.Indigo_Bunting) by extensions ['cmake', 'python']
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/014.Indigo_Bunting) by extension 'cmake'
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/014.Indigo_Bunting) by extension 'python'
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/014.Indigo_Bunting) by extensions ['python_setup_py']
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/014.Indigo_Bunting) by extension 'python_setup_py'
+[0.341s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/025.Pelagic_Cormorant) by extensions ['ignore', 'ignore_ament_install']
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/025.Pelagic_Cormorant) by extension 'ignore'
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/025.Pelagic_Cormorant) by extension 'ignore_ament_install'
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/025.Pelagic_Cormorant) by extensions ['colcon_pkg']
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/025.Pelagic_Cormorant) by extension 'colcon_pkg'
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/025.Pelagic_Cormorant) by extensions ['colcon_meta']
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/025.Pelagic_Cormorant) by extension 'colcon_meta'
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/025.Pelagic_Cormorant) by extensions ['ros']
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/025.Pelagic_Cormorant) by extension 'ros'
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/025.Pelagic_Cormorant) by extensions ['cmake', 'python']
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/025.Pelagic_Cormorant) by extension 'cmake'
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/025.Pelagic_Cormorant) by extension 'python'
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/025.Pelagic_Cormorant) by extensions ['python_setup_py']
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/025.Pelagic_Cormorant) by extension 'python_setup_py'
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/029.American_Crow) by extensions ['ignore', 'ignore_ament_install']
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/029.American_Crow) by extension 'ignore'
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/029.American_Crow) by extension 'ignore_ament_install'
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/029.American_Crow) by extensions ['colcon_pkg']
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/029.American_Crow) by extension 'colcon_pkg'
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/029.American_Crow) by extensions ['colcon_meta']
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/029.American_Crow) by extension 'colcon_meta'
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/029.American_Crow) by extensions ['ros']
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/029.American_Crow) by extension 'ros'
+[0.342s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/029.American_Crow) by extensions ['cmake', 'python']
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/029.American_Crow) by extension 'cmake'
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/029.American_Crow) by extension 'python'
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/029.American_Crow) by extensions ['python_setup_py']
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/029.American_Crow) by extension 'python_setup_py'
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/033.Yellow_billed_Cuckoo) by extensions ['ignore', 'ignore_ament_install']
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/033.Yellow_billed_Cuckoo) by extension 'ignore'
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/033.Yellow_billed_Cuckoo) by extension 'ignore_ament_install'
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/033.Yellow_billed_Cuckoo) by extensions ['colcon_pkg']
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/033.Yellow_billed_Cuckoo) by extension 'colcon_pkg'
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/033.Yellow_billed_Cuckoo) by extensions ['colcon_meta']
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/033.Yellow_billed_Cuckoo) by extension 'colcon_meta'
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/033.Yellow_billed_Cuckoo) by extensions ['ros']
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/033.Yellow_billed_Cuckoo) by extension 'ros'
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/033.Yellow_billed_Cuckoo) by extensions ['cmake', 'python']
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/033.Yellow_billed_Cuckoo) by extension 'cmake'
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/033.Yellow_billed_Cuckoo) by extension 'python'
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/033.Yellow_billed_Cuckoo) by extensions ['python_setup_py']
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/033.Yellow_billed_Cuckoo) by extension 'python_setup_py'
+[0.343s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/035.Purple_Finch) by extensions ['ignore', 'ignore_ament_install']
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/035.Purple_Finch) by extension 'ignore'
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/035.Purple_Finch) by extension 'ignore_ament_install'
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/035.Purple_Finch) by extensions ['colcon_pkg']
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/035.Purple_Finch) by extension 'colcon_pkg'
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/035.Purple_Finch) by extensions ['colcon_meta']
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/035.Purple_Finch) by extension 'colcon_meta'
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/035.Purple_Finch) by extensions ['ros']
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/035.Purple_Finch) by extension 'ros'
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/035.Purple_Finch) by extensions ['cmake', 'python']
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/035.Purple_Finch) by extension 'cmake'
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/035.Purple_Finch) by extension 'python'
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/035.Purple_Finch) by extensions ['python_setup_py']
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/035.Purple_Finch) by extension 'python_setup_py'
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/042.Vermilion_Flycatcher) by extensions ['ignore', 'ignore_ament_install']
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/042.Vermilion_Flycatcher) by extension 'ignore'
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/042.Vermilion_Flycatcher) by extension 'ignore_ament_install'
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/042.Vermilion_Flycatcher) by extensions ['colcon_pkg']
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/042.Vermilion_Flycatcher) by extension 'colcon_pkg'
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/042.Vermilion_Flycatcher) by extensions ['colcon_meta']
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/042.Vermilion_Flycatcher) by extension 'colcon_meta'
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/042.Vermilion_Flycatcher) by extensions ['ros']
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/042.Vermilion_Flycatcher) by extension 'ros'
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/042.Vermilion_Flycatcher) by extensions ['cmake', 'python']
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/042.Vermilion_Flycatcher) by extension 'cmake'
+[0.344s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/042.Vermilion_Flycatcher) by extension 'python'
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/042.Vermilion_Flycatcher) by extensions ['python_setup_py']
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/042.Vermilion_Flycatcher) by extension 'python_setup_py'
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/048.European_Goldfinch) by extensions ['ignore', 'ignore_ament_install']
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/048.European_Goldfinch) by extension 'ignore'
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/048.European_Goldfinch) by extension 'ignore_ament_install'
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/048.European_Goldfinch) by extensions ['colcon_pkg']
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/048.European_Goldfinch) by extension 'colcon_pkg'
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/048.European_Goldfinch) by extensions ['colcon_meta']
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/048.European_Goldfinch) by extension 'colcon_meta'
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/048.European_Goldfinch) by extensions ['ros']
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/048.European_Goldfinch) by extension 'ros'
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/048.European_Goldfinch) by extensions ['cmake', 'python']
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/048.European_Goldfinch) by extension 'cmake'
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/048.European_Goldfinch) by extension 'python'
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/048.European_Goldfinch) by extensions ['python_setup_py']
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/048.European_Goldfinch) by extension 'python_setup_py'
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/050.Eared_Grebe) by extensions ['ignore', 'ignore_ament_install']
+[0.345s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/050.Eared_Grebe) by extension 'ignore'
+[0.346s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/050.Eared_Grebe) by extension 'ignore_ament_install'
+[0.346s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/050.Eared_Grebe) by extensions ['colcon_pkg']
+[0.346s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/050.Eared_Grebe) by extension 'colcon_pkg'
+[0.346s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/050.Eared_Grebe) by extensions ['colcon_meta']
+[0.346s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/050.Eared_Grebe) by extension 'colcon_meta'
+[0.346s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/050.Eared_Grebe) by extensions ['ros']
+[0.346s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/050.Eared_Grebe) by extension 'ros'
+[0.346s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/050.Eared_Grebe) by extensions ['cmake', 'python']
+[0.346s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/050.Eared_Grebe) by extension 'cmake'
+[0.346s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/050.Eared_Grebe) by extension 'python'
+[0.346s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/050.Eared_Grebe) by extensions ['python_setup_py']
+[0.346s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/050.Eared_Grebe) by extension 'python_setup_py'
+[0.346s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/059.California_Gull) by extensions ['ignore', 'ignore_ament_install']
+[0.346s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/059.California_Gull) by extension 'ignore'
+[0.346s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/059.California_Gull) by extension 'ignore_ament_install'
+[0.346s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/059.California_Gull) by extensions ['colcon_pkg']
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/059.California_Gull) by extension 'colcon_pkg'
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/059.California_Gull) by extensions ['colcon_meta']
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/059.California_Gull) by extension 'colcon_meta'
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/059.California_Gull) by extensions ['ros']
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/059.California_Gull) by extension 'ros'
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/059.California_Gull) by extensions ['cmake', 'python']
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/059.California_Gull) by extension 'cmake'
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/059.California_Gull) by extension 'python'
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/059.California_Gull) by extensions ['python_setup_py']
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/059.California_Gull) by extension 'python_setup_py'
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/068.Ruby_throated_Hummingbird) by extensions ['ignore', 'ignore_ament_install']
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/068.Ruby_throated_Hummingbird) by extension 'ignore'
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/068.Ruby_throated_Hummingbird) by extension 'ignore_ament_install'
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/068.Ruby_throated_Hummingbird) by extensions ['colcon_pkg']
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/068.Ruby_throated_Hummingbird) by extension 'colcon_pkg'
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/068.Ruby_throated_Hummingbird) by extensions ['colcon_meta']
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/068.Ruby_throated_Hummingbird) by extension 'colcon_meta'
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/068.Ruby_throated_Hummingbird) by extensions ['ros']
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/068.Ruby_throated_Hummingbird) by extension 'ros'
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/068.Ruby_throated_Hummingbird) by extensions ['cmake', 'python']
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/068.Ruby_throated_Hummingbird) by extension 'cmake'
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/068.Ruby_throated_Hummingbird) by extension 'python'
+[0.347s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/068.Ruby_throated_Hummingbird) by extensions ['python_setup_py']
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/068.Ruby_throated_Hummingbird) by extension 'python_setup_py'
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/073.Blue_Jay) by extensions ['ignore', 'ignore_ament_install']
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/073.Blue_Jay) by extension 'ignore'
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/073.Blue_Jay) by extension 'ignore_ament_install'
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/073.Blue_Jay) by extensions ['colcon_pkg']
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/073.Blue_Jay) by extension 'colcon_pkg'
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/073.Blue_Jay) by extensions ['colcon_meta']
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/073.Blue_Jay) by extension 'colcon_meta'
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/073.Blue_Jay) by extensions ['ros']
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/073.Blue_Jay) by extension 'ros'
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/073.Blue_Jay) by extensions ['cmake', 'python']
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/073.Blue_Jay) by extension 'cmake'
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/073.Blue_Jay) by extension 'python'
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/073.Blue_Jay) by extensions ['python_setup_py']
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/073.Blue_Jay) by extension 'python_setup_py'
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/081.Pied_Kingfisher) by extensions ['ignore', 'ignore_ament_install']
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/081.Pied_Kingfisher) by extension 'ignore'
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/081.Pied_Kingfisher) by extension 'ignore_ament_install'
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/081.Pied_Kingfisher) by extensions ['colcon_pkg']
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/081.Pied_Kingfisher) by extension 'colcon_pkg'
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/081.Pied_Kingfisher) by extensions ['colcon_meta']
+[0.348s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/081.Pied_Kingfisher) by extension 'colcon_meta'
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/081.Pied_Kingfisher) by extensions ['ros']
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/081.Pied_Kingfisher) by extension 'ros'
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/081.Pied_Kingfisher) by extensions ['cmake', 'python']
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/081.Pied_Kingfisher) by extension 'cmake'
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/081.Pied_Kingfisher) by extension 'python'
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/081.Pied_Kingfisher) by extensions ['python_setup_py']
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/081.Pied_Kingfisher) by extension 'python_setup_py'
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/095.Baltimore_Oriole) by extensions ['ignore', 'ignore_ament_install']
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/095.Baltimore_Oriole) by extension 'ignore'
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/095.Baltimore_Oriole) by extension 'ignore_ament_install'
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/095.Baltimore_Oriole) by extensions ['colcon_pkg']
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/095.Baltimore_Oriole) by extension 'colcon_pkg'
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/095.Baltimore_Oriole) by extensions ['colcon_meta']
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/095.Baltimore_Oriole) by extension 'colcon_meta'
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/095.Baltimore_Oriole) by extensions ['ros']
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/095.Baltimore_Oriole) by extension 'ros'
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/095.Baltimore_Oriole) by extensions ['cmake', 'python']
+[0.349s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/095.Baltimore_Oriole) by extension 'cmake'
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/095.Baltimore_Oriole) by extension 'python'
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/095.Baltimore_Oriole) by extensions ['python_setup_py']
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/095.Baltimore_Oriole) by extension 'python_setup_py'
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/101.White_Pelican) by extensions ['ignore', 'ignore_ament_install']
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/101.White_Pelican) by extension 'ignore'
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/101.White_Pelican) by extension 'ignore_ament_install'
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/101.White_Pelican) by extensions ['colcon_pkg']
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/101.White_Pelican) by extension 'colcon_pkg'
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/101.White_Pelican) by extensions ['colcon_meta']
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/101.White_Pelican) by extension 'colcon_meta'
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/101.White_Pelican) by extensions ['ros']
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/101.White_Pelican) by extension 'ros'
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/101.White_Pelican) by extensions ['cmake', 'python']
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/101.White_Pelican) by extension 'cmake'
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/101.White_Pelican) by extension 'python'
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/101.White_Pelican) by extensions ['python_setup_py']
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/101.White_Pelican) by extension 'python_setup_py'
+[0.350s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/106.Horned_Puffin) by extensions ['ignore', 'ignore_ament_install']
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/106.Horned_Puffin) by extension 'ignore'
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/106.Horned_Puffin) by extension 'ignore_ament_install'
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/106.Horned_Puffin) by extensions ['colcon_pkg']
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/106.Horned_Puffin) by extension 'colcon_pkg'
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/106.Horned_Puffin) by extensions ['colcon_meta']
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/106.Horned_Puffin) by extension 'colcon_meta'
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/106.Horned_Puffin) by extensions ['ros']
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/106.Horned_Puffin) by extension 'ros'
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/106.Horned_Puffin) by extensions ['cmake', 'python']
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/106.Horned_Puffin) by extension 'cmake'
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/106.Horned_Puffin) by extension 'python'
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/106.Horned_Puffin) by extensions ['python_setup_py']
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/106.Horned_Puffin) by extension 'python_setup_py'
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/108.White_necked_Raven) by extensions ['ignore', 'ignore_ament_install']
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/108.White_necked_Raven) by extension 'ignore'
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/108.White_necked_Raven) by extension 'ignore_ament_install'
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/108.White_necked_Raven) by extensions ['colcon_pkg']
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/108.White_necked_Raven) by extension 'colcon_pkg'
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/108.White_necked_Raven) by extensions ['colcon_meta']
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/108.White_necked_Raven) by extension 'colcon_meta'
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/108.White_necked_Raven) by extensions ['ros']
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/108.White_necked_Raven) by extension 'ros'
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/108.White_necked_Raven) by extensions ['cmake', 'python']
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/108.White_necked_Raven) by extension 'cmake'
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/108.White_necked_Raven) by extension 'python'
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/108.White_necked_Raven) by extensions ['python_setup_py']
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/108.White_necked_Raven) by extension 'python_setup_py'
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/112.Great_Grey_Shrike) by extensions ['ignore', 'ignore_ament_install']
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/112.Great_Grey_Shrike) by extension 'ignore'
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/112.Great_Grey_Shrike) by extension 'ignore_ament_install'
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/112.Great_Grey_Shrike) by extensions ['colcon_pkg']
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/112.Great_Grey_Shrike) by extension 'colcon_pkg'
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/112.Great_Grey_Shrike) by extensions ['colcon_meta']
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/112.Great_Grey_Shrike) by extension 'colcon_meta'
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/112.Great_Grey_Shrike) by extensions ['ros']
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/112.Great_Grey_Shrike) by extension 'ros'
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/112.Great_Grey_Shrike) by extensions ['cmake', 'python']
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/112.Great_Grey_Shrike) by extension 'cmake'
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/112.Great_Grey_Shrike) by extension 'python'
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/112.Great_Grey_Shrike) by extensions ['python_setup_py']
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/112.Great_Grey_Shrike) by extension 'python_setup_py'
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/118.House_Sparrow) by extensions ['ignore', 'ignore_ament_install']
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/118.House_Sparrow) by extension 'ignore'
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/118.House_Sparrow) by extension 'ignore_ament_install'
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/118.House_Sparrow) by extensions ['colcon_pkg']
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/118.House_Sparrow) by extension 'colcon_pkg'
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/118.House_Sparrow) by extensions ['colcon_meta']
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/118.House_Sparrow) by extension 'colcon_meta'
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/118.House_Sparrow) by extensions ['ros']
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/118.House_Sparrow) by extension 'ros'
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/118.House_Sparrow) by extensions ['cmake', 'python']
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/118.House_Sparrow) by extension 'cmake'
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/118.House_Sparrow) by extension 'python'
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/118.House_Sparrow) by extensions ['python_setup_py']
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/118.House_Sparrow) by extension 'python_setup_py'
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/134.Cape_Glossy_Starling) by extensions ['ignore', 'ignore_ament_install']
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/134.Cape_Glossy_Starling) by extension 'ignore'
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/134.Cape_Glossy_Starling) by extension 'ignore_ament_install'
+[0.353s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/134.Cape_Glossy_Starling) by extensions ['colcon_pkg']
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/134.Cape_Glossy_Starling) by extension 'colcon_pkg'
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/134.Cape_Glossy_Starling) by extensions ['colcon_meta']
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/134.Cape_Glossy_Starling) by extension 'colcon_meta'
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/134.Cape_Glossy_Starling) by extensions ['ros']
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/134.Cape_Glossy_Starling) by extension 'ros'
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/134.Cape_Glossy_Starling) by extensions ['cmake', 'python']
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/134.Cape_Glossy_Starling) by extension 'cmake'
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/134.Cape_Glossy_Starling) by extension 'python'
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/134.Cape_Glossy_Starling) by extensions ['python_setup_py']
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/134.Cape_Glossy_Starling) by extension 'python_setup_py'
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/138.Tree_Swallow) by extensions ['ignore', 'ignore_ament_install']
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/138.Tree_Swallow) by extension 'ignore'
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/138.Tree_Swallow) by extension 'ignore_ament_install'
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/138.Tree_Swallow) by extensions ['colcon_pkg']
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/138.Tree_Swallow) by extension 'colcon_pkg'
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/138.Tree_Swallow) by extensions ['colcon_meta']
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/138.Tree_Swallow) by extension 'colcon_meta'
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/138.Tree_Swallow) by extensions ['ros']
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/138.Tree_Swallow) by extension 'ros'
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/138.Tree_Swallow) by extensions ['cmake', 'python']
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/138.Tree_Swallow) by extension 'cmake'
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/138.Tree_Swallow) by extension 'python'
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/138.Tree_Swallow) by extensions ['python_setup_py']
+[0.354s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/138.Tree_Swallow) by extension 'python_setup_py'
+[0.355s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/144.Common_Tern) by extensions ['ignore', 'ignore_ament_install']
+[0.355s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/144.Common_Tern) by extension 'ignore'
+[0.355s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/144.Common_Tern) by extension 'ignore_ament_install'
+[0.355s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/144.Common_Tern) by extensions ['colcon_pkg']
+[0.355s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/144.Common_Tern) by extension 'colcon_pkg'
+[0.355s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/144.Common_Tern) by extensions ['colcon_meta']
+[0.355s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/144.Common_Tern) by extension 'colcon_meta'
+[0.355s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/144.Common_Tern) by extensions ['ros']
+[0.355s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/144.Common_Tern) by extension 'ros'
+[0.355s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/144.Common_Tern) by extensions ['cmake', 'python']
+[0.355s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/144.Common_Tern) by extension 'cmake'
+[0.355s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/144.Common_Tern) by extension 'python'
+[0.355s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/144.Common_Tern) by extensions ['python_setup_py']
+[0.355s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/144.Common_Tern) by extension 'python_setup_py'
+[0.355s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/191.Red_headed_Woodpecker) by extensions ['ignore', 'ignore_ament_install']
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/191.Red_headed_Woodpecker) by extension 'ignore'
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/191.Red_headed_Woodpecker) by extension 'ignore_ament_install'
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/191.Red_headed_Woodpecker) by extensions ['colcon_pkg']
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/191.Red_headed_Woodpecker) by extension 'colcon_pkg'
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/191.Red_headed_Woodpecker) by extensions ['colcon_meta']
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/191.Red_headed_Woodpecker) by extension 'colcon_meta'
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/191.Red_headed_Woodpecker) by extensions ['ros']
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/191.Red_headed_Woodpecker) by extension 'ros'
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/191.Red_headed_Woodpecker) by extensions ['cmake', 'python']
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/191.Red_headed_Woodpecker) by extension 'cmake'
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/191.Red_headed_Woodpecker) by extension 'python'
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/191.Red_headed_Woodpecker) by extensions ['python_setup_py']
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(data/birds/191.Red_headed_Woodpecker) by extension 'python_setup_py'
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial3) by extensions ['ignore', 'ignore_ament_install']
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial3) by extension 'ignore'
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial3) by extension 'ignore_ament_install'
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial3) by extensions ['colcon_pkg']
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial3) by extension 'colcon_pkg'
+[0.356s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial3) by extensions ['colcon_meta']
+[0.357s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial3) by extension 'colcon_meta'
+[0.357s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial3) by extensions ['ros']
+[0.357s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial3) by extension 'ros'
+[0.362s] DEBUG:colcon.colcon_core.package_identification:Package 'dis_tutorial3' with type 'ros.ament_cmake' and name 'dis_tutorial3'
+[0.363s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial7) by extensions ['ignore', 'ignore_ament_install']
+[0.363s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial7) by extension 'ignore'
+[0.363s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial7) by extension 'ignore_ament_install'
+[0.363s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial7) by extensions ['colcon_pkg']
+[0.363s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial7) by extension 'colcon_pkg'
+[0.363s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial7) by extensions ['colcon_meta']
+[0.363s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial7) by extension 'colcon_meta'
+[0.364s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial7) by extensions ['ros']
+[0.364s] Level 1:colcon.colcon_core.package_identification:_identify(dis_tutorial7) by extension 'ros'
+[0.365s] DEBUG:colcon.colcon_core.package_identification:Package 'dis_tutorial7' with type 'ros.ament_cmake' and name 'dis_tutorial7'
+[0.366s] Level 1:colcon.colcon_core.package_identification:_identify(helper_scripts) by extensions ['ignore', 'ignore_ament_install']
+[0.366s] Level 1:colcon.colcon_core.package_identification:_identify(helper_scripts) by extension 'ignore'
+[0.366s] Level 1:colcon.colcon_core.package_identification:_identify(helper_scripts) by extension 'ignore_ament_install'
+[0.366s] Level 1:colcon.colcon_core.package_identification:_identify(helper_scripts) by extensions ['colcon_pkg']
+[0.366s] Level 1:colcon.colcon_core.package_identification:_identify(helper_scripts) by extension 'colcon_pkg'
+[0.366s] Level 1:colcon.colcon_core.package_identification:_identify(helper_scripts) by extensions ['colcon_meta']
+[0.366s] Level 1:colcon.colcon_core.package_identification:_identify(helper_scripts) by extension 'colcon_meta'
+[0.366s] Level 1:colcon.colcon_core.package_identification:_identify(helper_scripts) by extensions ['ros']
+[0.366s] Level 1:colcon.colcon_core.package_identification:_identify(helper_scripts) by extension 'ros'
+[0.366s] Level 1:colcon.colcon_core.package_identification:_identify(helper_scripts) by extensions ['cmake', 'python']
+[0.366s] Level 1:colcon.colcon_core.package_identification:_identify(helper_scripts) by extension 'cmake'
+[0.366s] Level 1:colcon.colcon_core.package_identification:_identify(helper_scripts) by extension 'python'
+[0.366s] Level 1:colcon.colcon_core.package_identification:_identify(helper_scripts) by extensions ['python_setup_py']
+[0.366s] Level 1:colcon.colcon_core.package_identification:_identify(helper_scripts) by extension 'python_setup_py'
+[0.366s] Level 1:colcon.colcon_core.package_identification:_identify(img) by extensions ['ignore', 'ignore_ament_install']
+[0.367s] Level 1:colcon.colcon_core.package_identification:_identify(img) by extension 'ignore'
+[0.367s] Level 1:colcon.colcon_core.package_identification:_identify(img) by extension 'ignore_ament_install'
+[0.367s] Level 1:colcon.colcon_core.package_identification:_identify(img) by extensions ['colcon_pkg']
+[0.367s] Level 1:colcon.colcon_core.package_identification:_identify(img) by extension 'colcon_pkg'
+[0.367s] Level 1:colcon.colcon_core.package_identification:_identify(img) by extensions ['colcon_meta']
+[0.367s] Level 1:colcon.colcon_core.package_identification:_identify(img) by extension 'colcon_meta'
+[0.367s] Level 1:colcon.colcon_core.package_identification:_identify(img) by extensions ['ros']
+[0.367s] Level 1:colcon.colcon_core.package_identification:_identify(img) by extension 'ros'
+[0.367s] Level 1:colcon.colcon_core.package_identification:_identify(img) by extensions ['cmake', 'python']
+[0.367s] Level 1:colcon.colcon_core.package_identification:_identify(img) by extension 'cmake'
+[0.367s] Level 1:colcon.colcon_core.package_identification:_identify(img) by extension 'python'
+[0.367s] Level 1:colcon.colcon_core.package_identification:_identify(img) by extensions ['python_setup_py']
+[0.367s] Level 1:colcon.colcon_core.package_identification:_identify(img) by extension 'python_setup_py'
+[0.367s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.367s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.367s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.367s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.368s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.368s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.368s] Level 1:colcon.colcon_core.package_identification:_identify(models) by extensions ['ignore', 'ignore_ament_install']
+[0.368s] Level 1:colcon.colcon_core.package_identification:_identify(models) by extension 'ignore'
+[0.368s] Level 1:colcon.colcon_core.package_identification:_identify(models) by extension 'ignore_ament_install'
+[0.368s] Level 1:colcon.colcon_core.package_identification:_identify(models) by extensions ['colcon_pkg']
+[0.368s] Level 1:colcon.colcon_core.package_identification:_identify(models) by extension 'colcon_pkg'
+[0.368s] Level 1:colcon.colcon_core.package_identification:_identify(models) by extensions ['colcon_meta']
+[0.368s] Level 1:colcon.colcon_core.package_identification:_identify(models) by extension 'colcon_meta'
+[0.368s] Level 1:colcon.colcon_core.package_identification:_identify(models) by extensions ['ros']
+[0.368s] Level 1:colcon.colcon_core.package_identification:_identify(models) by extension 'ros'
+[0.368s] Level 1:colcon.colcon_core.package_identification:_identify(models) by extensions ['cmake', 'python']
+[0.368s] Level 1:colcon.colcon_core.package_identification:_identify(models) by extension 'cmake'
+[0.368s] Level 1:colcon.colcon_core.package_identification:_identify(models) by extension 'python'
+[0.368s] Level 1:colcon.colcon_core.package_identification:_identify(models) by extensions ['python_setup_py']
+[0.368s] Level 1:colcon.colcon_core.package_identification:_identify(models) by extension 'python_setup_py'
+[0.368s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.368s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.368s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.368s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.368s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.386s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[0.386s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[0.387s] WARNING:colcon.colcon_ros.prefix_path.ament:The path '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7' in the environment variable AMENT_PREFIX_PATH doesn't exist
+[0.387s] WARNING:colcon.colcon_ros.prefix_path.ament:The path '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3' in the environment variable AMENT_PREFIX_PATH doesn't exist
+[0.387s] WARNING:colcon.colcon_ros.prefix_path.catkin:The path '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7' in the environment variable CMAKE_PREFIX_PATH doesn't exist
+[0.387s] WARNING:colcon.colcon_ros.prefix_path.catkin:The path '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3' in the environment variable CMAKE_PREFIX_PATH doesn't exist
+[0.388s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 0 installed packages in /home/beta/Desktop/RINS-TASK2/install
+[0.388s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 0 installed packages in /home/beta/colcon_ws/install
+[0.389s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 416 installed packages in /opt/ros/humble
+[0.391s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[0.433s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial3' build argument 'cmake_args' from command line to 'None'
+[0.433s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial3' build argument 'cmake_target' from command line to 'None'
+[0.433s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial3' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.433s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial3' build argument 'cmake_clean_cache' from command line to 'False'
+[0.433s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial3' build argument 'cmake_clean_first' from command line to 'False'
+[0.433s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial3' build argument 'cmake_force_configure' from command line to 'False'
+[0.433s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial3' build argument 'ament_cmake_args' from command line to 'None'
+[0.433s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial3' build argument 'catkin_cmake_args' from command line to 'None'
+[0.433s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial3' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.433s] DEBUG:colcon.colcon_core.verb:Building package 'dis_tutorial3' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial3', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3', 'merge_install': False, 'path': '/home/beta/Desktop/RINS-TASK2/dis_tutorial3', 'symlink_install': False, 'test_result_base': None}
+[0.434s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial7' build argument 'cmake_args' from command line to 'None'
+[0.434s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial7' build argument 'cmake_target' from command line to 'None'
+[0.434s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial7' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.434s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial7' build argument 'cmake_clean_cache' from command line to 'False'
+[0.434s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial7' build argument 'cmake_clean_first' from command line to 'False'
+[0.434s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial7' build argument 'cmake_force_configure' from command line to 'False'
+[0.434s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial7' build argument 'ament_cmake_args' from command line to 'None'
+[0.434s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial7' build argument 'catkin_cmake_args' from command line to 'None'
+[0.434s] Level 5:colcon.colcon_core.verb:set package 'dis_tutorial7' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.434s] DEBUG:colcon.colcon_core.verb:Building package 'dis_tutorial7' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7', 'merge_install': False, 'path': '/home/beta/Desktop/RINS-TASK2/dis_tutorial7', 'symlink_install': False, 'test_result_base': None}
+[0.434s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.435s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.435s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/beta/Desktop/RINS-TASK2/dis_tutorial3' with build type 'ament_cmake'
+[0.435s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/beta/Desktop/RINS-TASK2/dis_tutorial3'
+[0.437s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.437s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.437s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.440s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/beta/Desktop/RINS-TASK2/dis_tutorial7' with build type 'ament_cmake'
+[0.441s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/beta/Desktop/RINS-TASK2/dis_tutorial7'
+[0.441s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.441s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.454s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial3': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/beta/Desktop/RINS-TASK2/dis_tutorial3 -DCMAKE_INSTALL_PREFIX=/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3
+[0.458s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/beta/Desktop/RINS-TASK2/dis_tutorial7 -DCMAKE_INSTALL_PREFIX=/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7
+[1.521s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial3' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/beta/Desktop/RINS-TASK2/dis_tutorial3 -DCMAKE_INSTALL_PREFIX=/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3
+[1.524s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial3': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/beta/Desktop/RINS-TASK2/build/dis_tutorial3 -- -j16 -l16
+[1.570s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial3' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/beta/Desktop/RINS-TASK2/build/dis_tutorial3 -- -j16 -l16
+[1.581s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial3': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/beta/Desktop/RINS-TASK2/build/dis_tutorial3
+[1.669s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(dis_tutorial3)
+[1.669s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial3' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/beta/Desktop/RINS-TASK2/build/dis_tutorial3
+[1.671s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3' for CMake module files
+[1.672s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3' for CMake config files
+[1.672s] Level 1:colcon.colcon_core.shell:create_environment_hook('dis_tutorial3', 'cmake_prefix_path')
+[1.673s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3/hook/cmake_prefix_path.ps1'
+[1.674s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3/hook/cmake_prefix_path.dsv'
+[1.674s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3/hook/cmake_prefix_path.sh'
+[1.676s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/lib'
+[1.676s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/bin'
+[1.676s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/lib/pkgconfig/dis_tutorial3.pc'
+[1.677s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/lib/python3.10/site-packages'
+[1.677s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/bin'
+[1.679s] INFO:colcon.colcon_core.shell:Creating package script '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3/package.ps1'
+[1.681s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3/package.dsv'
+[1.682s] INFO:colcon.colcon_core.shell:Creating package script '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3/package.sh'
+[1.683s] INFO:colcon.colcon_core.shell:Creating package script '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3/package.bash'
+[1.684s] INFO:colcon.colcon_core.shell:Creating package script '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3/package.zsh'
+[1.684s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/colcon-core/packages/dis_tutorial3)
+[1.685s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(dis_tutorial3)
+[1.685s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3' for CMake module files
+[1.686s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3' for CMake config files
+[1.686s] Level 1:colcon.colcon_core.shell:create_environment_hook('dis_tutorial3', 'cmake_prefix_path')
+[1.687s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3/hook/cmake_prefix_path.ps1'
+[1.688s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3/hook/cmake_prefix_path.dsv'
+[1.688s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3/hook/cmake_prefix_path.sh'
+[1.689s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/lib'
+[1.689s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/bin'
+[1.689s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/lib/pkgconfig/dis_tutorial3.pc'
+[1.689s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/lib/python3.10/site-packages'
+[1.690s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/bin'
+[1.690s] INFO:colcon.colcon_core.shell:Creating package script '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3/package.ps1'
+[1.691s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3/package.dsv'
+[1.692s] INFO:colcon.colcon_core.shell:Creating package script '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3/package.sh'
+[1.692s] INFO:colcon.colcon_core.shell:Creating package script '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3/package.bash'
+[1.693s] INFO:colcon.colcon_core.shell:Creating package script '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3/package.zsh'
+[1.693s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/colcon-core/packages/dis_tutorial3)
+[1.712s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/beta/Desktop/RINS-TASK2/dis_tutorial7 -DCMAKE_INSTALL_PREFIX=/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7
+[1.714s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/beta/Desktop/RINS-TASK2/build/dis_tutorial7 -- -j16 -l16
+[1.761s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/beta/Desktop/RINS-TASK2/build/dis_tutorial7 -- -j16 -l16
+[1.765s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/beta/Desktop/RINS-TASK2/build/dis_tutorial7
+[1.815s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7' returned '1': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/beta/Desktop/RINS-TASK2/build/dis_tutorial7
+[1.816s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(dis_tutorial7)
+[1.816s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7' for CMake module files
+[1.816s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7' for CMake config files
+[1.817s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/lib'
+[1.817s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/bin'
+[1.817s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/lib/pkgconfig/dis_tutorial7.pc'
+[1.817s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/lib/python3.10/site-packages'
+[1.817s] Level 1:colcon.colcon_core.environment:checking '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/bin'
+[1.817s] INFO:colcon.colcon_core.shell:Creating package script '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/share/dis_tutorial7/package.ps1'
+[1.818s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/share/dis_tutorial7/package.dsv'
+[1.818s] INFO:colcon.colcon_core.shell:Creating package script '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/share/dis_tutorial7/package.sh'
+[1.818s] INFO:colcon.colcon_core.shell:Creating package script '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/share/dis_tutorial7/package.bash'
+[1.819s] INFO:colcon.colcon_core.shell:Creating package script '/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/share/dis_tutorial7/package.zsh'
+[1.819s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/share/colcon-core/packages/dis_tutorial7)
+[1.830s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[1.831s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[1.832s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '1'
+[1.833s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[1.839s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.notify_send': Could not find 'notify-send'
+[1.840s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[1.840s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[1.840s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[1.861s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[1.862s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/beta/Desktop/RINS-TASK2/install/local_setup.ps1'
+[1.864s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/beta/Desktop/RINS-TASK2/install/_local_setup_util_ps1.py'
+[1.866s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/beta/Desktop/RINS-TASK2/install/setup.ps1'
+[1.867s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/beta/Desktop/RINS-TASK2/install/local_setup.sh'
+[1.867s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/beta/Desktop/RINS-TASK2/install/_local_setup_util_sh.py'
+[1.868s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/beta/Desktop/RINS-TASK2/install/setup.sh'
+[1.869s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/beta/Desktop/RINS-TASK2/install/local_setup.bash'
+[1.869s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/beta/Desktop/RINS-TASK2/install/setup.bash'
+[1.870s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/beta/Desktop/RINS-TASK2/install/local_setup.zsh'
+[1.870s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/beta/Desktop/RINS-TASK2/install/setup.zsh'
