@@ -31,6 +31,11 @@ import json
 import os
 import subprocess
 from datetime import datetime
+# Add imports for gender detection
+from PIL import Image as PILImage
+from sensor_msgs.msg import Image
+from transformers import AutoFeatureExtractor, AutoModelForImageClassification
+import torch
 
 @dataclass
 class RGBDetection:
@@ -50,6 +55,9 @@ class FaceData:
         self.normal = normal      # numpy array [x, y, z]
         self.is_new = is_new      # Flag to track if this is a newly detected face
         self.last_seen = time.time()
+        # Add gender information
+        self.gender = "Unknown"
+        self.gender_confidence = 0.0
         
     def update_position(self, new_position, new_normal, smoothing_factor=0.3):
         """Update position with smoothing"""
@@ -60,13 +68,20 @@ class FaceData:
         self.last_seen = time.time()
         self.is_new = False
     
+    def update_gender(self, gender, confidence):
+        """Update gender information"""
+        self.gender = gender
+        self.gender_confidence = confidence
+    
     def to_dict(self):
         """Convert to dictionary for serialization"""
         return {
             'face_id': int(self.face_id),
             'position': self.position.tolist(),
             'normal': self.normal.tolist(),
-            'last_seen': self.last_seen
+            'last_seen': self.last_seen,
+            'gender': self.gender,
+            'gender_confidence': float(self.gender_confidence)
         }
     
     @classmethod
@@ -79,6 +94,8 @@ class FaceData:
             is_new=False
         )
         face.last_seen = data.get('last_seen', time.time())
+        face.gender = data.get('gender', "Unknown")
+        face.gender_confidence = data.get('gender_confidence', 0.0)
         return face
 
 class DetectFaces(Node):
@@ -111,6 +128,22 @@ class DetectFaces(Node):
         
         self.bridge = CvBridge()
         self.model = YOLO("yolov8n.pt")
+
+        self.get_logger().info("Loading gender detection model...")
+        try:
+            model_name = "dima806/fairface_gender_image_detection"
+            self.gender_feature_extractor = AutoFeatureExtractor.from_pretrained(model_name)
+            self.gender_model = AutoModelForImageClassification.from_pretrained(model_name)
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            self.get_logger().info(f"Using device: {self.device}")
+            self.gender_model.to(self.device)
+            self.gender_model.eval()
+            self.gender_labels = self.gender_model.config.id2label if hasattr(self.gender_model.config, "id2label") else {0: "Male", 1: "Female"}
+            self.get_logger().info("Gender detection model loaded successfully")
+        except Exception as e:
+            self.get_logger().error(f"Failed to load gender detection model: {e}")
+            # Continue without gender detection
+            self.gender_model = None
         
         # Message synchronization
         self.rgb_buffer = deque(maxlen=30)  # Store recent RGB detections
@@ -165,6 +198,31 @@ class DetectFaces(Node):
         self.get_logger().info(f"Node initialized! Detecting faces and publishing markers to {array_topic}.")
         self.get_logger().info(f"Saving detected faces to {self.save_file}")
         self.get_logger().info(f"Will say '{self.greeting_text}' when a new face is detected")
+
+    def detect_gender(self, face_image):
+        """Detect gender from face image"""
+        if self.gender_model is None:
+            return "Unknown", 0.0
+            
+        try:
+            # Convert OpenCV image (BGR) to PIL image (RGB)
+            pil_image = PILImage.fromarray(cv2.cvtColor(face_image, cv2.COLOR_BGR2RGB))
+            
+            # Process with gender detection model
+            inputs = self.gender_feature_extractor(images=pil_image, return_tensors="pt").to(self.device)
+            with torch.no_grad():
+                outputs = self.gender_model(**inputs)
+                logits = outputs.logits
+                probs = torch.softmax(logits, dim=1).cpu().numpy()[0]
+                pred_id = probs.argmax()
+                pred_label = self.gender_labels[pred_id]
+                confidence = float(probs[pred_id])
+            
+            self.get_logger().debug(f"Gender detection: {pred_label} with confidence {confidence:.4f}")
+            return pred_label, confidence
+        except Exception as e:
+            self.get_logger().error(f"Error in gender detection: {e}")
+            return "Unknown", 0.0
     
     def say_greeting(self):
         """Use the text-to-speech script to say greeting"""
@@ -320,8 +378,12 @@ class DetectFaces(Node):
                     
                     # Only consider detections in the lower half of the image
                     if cy >= lower_half_y:
-                        # Store detection with size information
-                        faces.append((cx, cy, width, height))
+                        # Extract face image for gender detection
+                        face_img = cv_image[int(box[1]):int(box[3]), int(box[0]):int(box[2])]
+                        gender, confidence = self.detect_gender(face_img)
+                        
+                        # Store detection with size and gender information
+                        faces.append((cx, cy, width, height, gender, confidence))
                         
                         # Visualize detection
                         detect_image = cv2.rectangle(detect_image, 
@@ -329,6 +391,12 @@ class DetectFaces(Node):
                                             (int(box[2]), int(box[3])), 
                                             self.detection_color, 2)
                         detect_image = cv2.circle(detect_image, (cx, cy), 5, self.detection_color, -1)
+                        
+                        # Add gender and confidence text
+                        gender_text = f"{gender}: {confidence:.2f}"
+                        text_pos = (int(box[0]), int(box[1]) - 10) if int(box[1]) > 30 else (int(box[0]), int(box[3]) + 20)
+                        cv2.putText(detect_image, gender_text, text_pos, 
+                                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
                     else:
                         # Draw rejected detection with different color
                         detect_image = cv2.rectangle(detect_image, 
@@ -420,7 +488,14 @@ class DetectFaces(Node):
             return
         
         # Process each detected face
-        for face_idx, (cx, cy, width, height) in enumerate(faces):
+        for face_idx, face_data in enumerate(faces):
+            # Unpack face data, which now includes gender information
+            if len(face_data) >= 6:  # If gender info is included
+                cx, cy, width, height, gender, gender_confidence = face_data
+            else:  # Backward compatibility
+                cx, cy, width, height = face_data
+                gender, gender_confidence = "Unknown", 0.0
+
             # Extract a region of interest (ROI) from the point cloud
             # Use a percentage of the bbox size to get a good representation
             roi_width = max(10, int(width * 0.6))
@@ -505,18 +580,30 @@ class DetectFaces(Node):
             if matched_face_id is None:
                 new_face_id = self.next_face_id
                 self.next_face_id += 1
-                self.persistent_faces[new_face_id] = FaceData(
+                new_face = FaceData(
                     face_id=new_face_id, 
                     position=transformed_center, 
                     normal=transformed_normal,
                     is_new=True
                 )
-                self.get_logger().info(f"New face detected! ID: {new_face_id}, Position: {transformed_center}, Normal: {transformed_normal}")
+                # Update gender information
+                new_face.update_gender(gender, gender_confidence)
+                self.persistent_faces[new_face_id] = new_face
+                
+                self.get_logger().info(f"New face detected! ID: {new_face_id}, Position: {transformed_center}, Gender: {gender} ({gender_confidence:.2f})")
 
                 self.publish_transform_data(transformed_center, transformed_normal)
                 # Say greeting when new face is detected
                 self.say_greeting()
             else:
+                # Update existing face
+                face_data = self.persistent_faces[matched_face_id]
+                face_data.update_position(transformed_center, transformed_normal)
+                # Update gender if confidence is higher
+                if gender_confidence > face_data.gender_confidence:
+                    face_data.update_gender(gender, gender_confidence)
+                    self.get_logger().debug(f"Updated gender for face ID {matched_face_id}: {gender} ({gender_confidence:.2f})")
+                
                 self.get_logger().debug(f"Updated face ID: {matched_face_id}, Position: {transformed_center}")
     
     def transform_point_to_map(self, point):
@@ -644,7 +731,7 @@ class DetectFaces(Node):
             text_marker.color.g = 1.0
             text_marker.color.b = 1.0
             text_marker.color.a = 0.8
-            text_marker.text = f"ID: {face_id}"
+            text_marker.text = f"ID: {face_id})"
             
             if self.marker_lifetime > 0:
                 text_marker.lifetime.sec = int(self.marker_lifetime)
