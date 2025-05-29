@@ -70,9 +70,10 @@ class RobotCommander(Node):
         self.detected_person_markers = None
         self.greeting_distance_threshold = 1.5  # meters
         self.greeted_faces = set()  # Keep track of which faces we've already greeted
+        self.person_to_greet = None  # Will hold information about person we're approaching
         self.current_waypoint_idx = 0
         self.tts_script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
-                                           "speak.py")  # Use direct path from current script
+                                        "speak.py")  # Use direct path from current script
         self.greeting_text = "Hello there!"
         self.current_task = None  # None, 'waypoint', or 'greeting'
  
@@ -426,8 +427,6 @@ class RobotCommander(Node):
         # Navigate to the goal position
         self.info(f"Navigating to greet person (face ID: {self.person_to_greet['face_id']})")
         return self.goToPose(goal_pose)
-    
-
 def main(args=None):
     
     rclpy.init(args=args)
@@ -461,15 +460,17 @@ def main(args=None):
     while not waypoints:
         rclpy.spin_once(rc, timeout_sec=0.5)
     
-    rc.info("Starting navigation through waypoints...")
+    # Phase 1: Traverse all waypoints and collect face locations
+    rc.info("Phase 1: Starting navigation through waypoints...")
+    detected_faces = {}  # Dictionary to store face_id -> position mapping
     
-    # Navigate to each waypoint, but check for people between waypoints
     rc.current_waypoint_idx = 0
     
     while rc.current_waypoint_idx < len(waypoints):
         # Process any pending callbacks
         rclpy.spin_once(rc, timeout_sec=0.1)
-                    # Get current waypoint
+        
+        # Get current waypoint
         x, y, yaw = waypoints[rc.current_waypoint_idx]
         
         rc.info(f"Navigating to waypoint {rc.current_waypoint_idx + 1}/{len(waypoints)}: ({x}, {y})")
@@ -491,31 +492,140 @@ def main(args=None):
         
         # Wait for completion or interruption
         while not rc.isTaskComplete():
-            rc.info(f"Moving to waypoint {rc.current_waypoint_idx + 1}...")
+            rclpy.spin_once(rc, timeout_sec=0.5)
+            
+            # While moving, collect face information
+            if rc.detected_person_markers:
+                for marker in rc.detected_person_markers.markers:
+                    # Check if it's a face marker
+                    if marker.ns == "face":
+                        face_id = marker.id
+                        face_pos = np.array([marker.pose.position.x, marker.pose.position.y])
+                        # Store face position in map coordinates
+                        detected_faces[face_id] = face_pos
+                        rc.info(f"Detected face ID {face_id} at position {face_pos}")
+            
+            time.sleep(0.5)
+        
+        rc.info(f"Reached waypoint {rc.current_waypoint_idx + 1}!")
+        
+        # Optional: spin at each waypoint to look around
+        if rc.current_waypoint_idx < len(waypoints) - 1:  # Don't spin at the last waypoint
+            rc.info("Spinning to look around...")
+            rc.spin(6.28)  # Spin 360 degrees
+            while not rc.isTaskComplete():
+                rclpy.spin_once(rc, timeout_sec=0.5)
+                # Continue collecting face information during spin
+                if rc.detected_person_markers:
+                    for marker in rc.detected_person_markers.markers:
+                        if marker.ns == "face":
+                            face_id = marker.id
+                            face_pos = np.array([marker.pose.position.x, marker.pose.position.y])
+                            detected_faces[face_id] = face_pos
+                            rc.info(f"Detected face ID {face_id} at position {face_pos}")
+                time.sleep(0.5)
+
+        rc.current_waypoint_idx += 1
+        rc.current_task = None
+
+    rc.info("Phase 1 completed: Traversed all waypoints!")
+    rc.info(f"Detected {len(detected_faces)} unique faces during traversal.")
+    
+    # Phase 2: Visit and greet each detected face
+    rc.info("Phase 2: Starting face greeting sequence...")
+    
+    for face_id, face_position in detected_faces.items():
+        if face_id in rc.greeted_faces:
+            rc.info(f"Already greeted face ID {face_id}, skipping.")
+            continue
+            
+        rc.info(f"Moving to greet face ID {face_id} at position {face_position}")
+        
+        # Calculate approach position (slightly before the face)
+        approach_distance = 1.0  # meters
+        
+        # If we have current robot position from AMCL
+        if hasattr(rc, 'current_pose'):
+            robot_pos = np.array([rc.current_pose.position.x, rc.current_pose.position.y])
+            direction = face_position - robot_pos
+            direction_norm = direction / np.linalg.norm(direction)
+            # Calculate position 1 meter away from the face
+            goal_pos = face_position - direction_norm * approach_distance
+        else:
+            # Fallback: just go 1 meter in front of face along X axis
+            goal_pos = face_position.copy()
+            goal_pos[0] -= approach_distance
+        
+        # Set up person to greet
+        rc.person_to_greet = {
+            'face_id': face_id,
+            'person_pos': face_position
+        }
+        
+        # Create the goal pose
+        goal_pose = PoseStamped()
+        goal_pose.header.frame_id = 'map'
+        goal_pose.header.stamp = rc.get_clock().now().to_msg()
+        
+        goal_pose.pose.position.x = goal_pos[0]
+        goal_pose.pose.position.y = goal_pos[1]
+        goal_pose.pose.position.z = 0.0
+        
+        # Calculate orientation to face the person
+        direction = face_position - goal_pos
+        yaw = np.arctan2(direction[1], direction[0])
+        goal_pose.pose.orientation = rc.YawToQuaternion(yaw)
+        
+        # Set current task
+        rc.current_task = 'greeting'
+        
+        # Navigate to the greeting position
+        rc.goToPose(goal_pose)
+        
+        # Wait for completion
+        while not rc.isTaskComplete():
             rclpy.spin_once(rc, timeout_sec=0.5)
             time.sleep(0.5)
         
-
-            rc.info(f"Reached waypoint {rc.current_waypoint_idx + 1}!")
-            
-            # Optional: spin at each waypoint to look around
-            if rc.current_waypoint_idx < len(waypoints) - 1:  # Don't spin at the last waypoint
-                rc.info("Spinning to look around...")
-                #rc.spin(6.28)  # Spin 360 degrees
-                while not rc.isTaskComplete():
-                    rclpy.spin_once(rc, timeout_sec=0.5)
-                    time.sleep(0.5)
-
-                rc.current_waypoint_idx += 1
-                rc.current_task = None
-
-    rc.info("Completed all waypoints!")
+        # Greet the person
+        rc.sayGreeting(f"Hello there! Nice to meet you, person number {face_id}!")
+        rc.greeted_faces.add(face_id)
+        rc.info(f"Greeted face ID {face_id}")
+        
+        # Wait a moment after greeting
+        time.sleep(2.0)
     
-    # Optional: return to starting position
-    rc.info("Navigation sequence completed successfully.")
+    # Return to the starting waypoint (waypoint 0)
+    if waypoints:
+        rc.info("Returning to starting position (waypoint 0)...")
+        x, y, yaw = waypoints[0]
+        
+        # Create the goal pose
+        goal_pose = PoseStamped()
+        goal_pose.header.frame_id = 'map'
+        goal_pose.header.stamp = rc.get_clock().now().to_msg()
+        
+        goal_pose.pose.position.x = x
+        goal_pose.pose.position.y = y
+        goal_pose.pose.orientation = rc.YawToQuaternion(yaw)
+        
+        # Set current task
+        rc.current_task = 'waypoint'
+        
+        # Send navigation command
+        rc.goToPose(goal_pose)
+        
+        # Wait for completion
+        while not rc.isTaskComplete():
+            rclpy.spin_once(rc, timeout_sec=0.5)
+            time.sleep(0.5)
+        
+        rc.info("Returned to starting position!")
+    
+    rc.info("Mission completed successfully!")
     
     rc.destroyNode()
-
+    
 # And a simple example
 if __name__=="__main__":
     main()
