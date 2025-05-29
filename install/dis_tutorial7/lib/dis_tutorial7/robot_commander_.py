@@ -70,7 +70,6 @@ class RobotCommander(Node):
         self.detected_person_markers = None
         self.greeting_distance_threshold = 1.5  # meters
         self.greeted_faces = set()  # Keep track of which faces we've already greeted
-        self.interrupt_for_greeting = False
         self.current_waypoint_idx = 0
         self.tts_script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
                                            "speak.py")  # Use direct path from current script
@@ -335,10 +334,6 @@ class RobotCommander(Node):
         self.debug('Received amcl pose')
         self.initial_pose_received = True
         self.current_pose = msg.pose.pose
-        
-        # Check if we need to interrupt waypoint navigation to greet someone
-        if self.current_task == 'waypoint' and self.detected_person_markers:
-            self._check_for_nearby_people()
         return
 
     def _feedbackCallback(self, msg):
@@ -357,83 +352,8 @@ class RobotCommander(Node):
         # Log the details of each marker
         for marker in msg.markers:
             self.debug(f"_peopleMarkerCallback: Received marker - NS: {marker.ns}, ID: {marker.id}, Pose: {marker.pose}")
-        
-        # Check if we should interrupt current navigation to greet someone
-        if self.current_task == 'waypoint' and self.current_pose:
-            self._check_for_nearby_people()
-            
-    def _check_for_nearby_people(self):
-        """Check if there are people nearby that we should greet"""
-        if not self.detected_person_markers or not self.current_pose:
-            self.debug("_check_for_nearby_people: No person markers or current pose, returning.")
-            return
-        
-        # Get robot position
-        robot_pos = np.array([
-            self.current_pose.position.x,
-            self.current_pose.position.y
-        ])
-        
-        # Find goal positions markers (ns="goal_positions")
-        goal_markers = []
-        person_markers = {}
-        for marker in self.detected_person_markers.markers:
-            self.debug(f"_check_for_nearby_people: Processing marker - NS: {marker.ns}, ID: {marker.id}") # Added debug log
-            if marker.ns == "goal_positions":
-                face_id = marker.id
-                if face_id not in self.greeted_faces:  # Only consider faces we haven't greeted yet
-                    goal_pos = np.array([marker.pose.position.x, marker.pose.position.y])
-                    distance = np.linalg.norm(robot_pos - goal_pos)
-                    goal_markers.append((face_id, goal_pos, distance))
-                    self.debug(f"_check_for_nearby_people: Goal marker found - Face ID: {face_id}, Distance: {distance:.2f}") # Added debug log
-                else:
-                    self.debug(f"_check_for_nearby_people: Face ID {face_id} already greeted, skipping.") # Added debug log
-            elif marker.ns == "person_positions":
-                person_markers[marker.id] = np.array([marker.pose.position.x, marker.pose.position.y])
-        
-        if goal_markers:
-            self.debug("_check_for_nearby_people: Goal markers found, processing...") # Added debug log
-            # Sort by distance
-            goal_markers.sort(key=lambda x: x[2])
-            
-            # Find closest ungreeted person
-            closest_face_id, goal_pos, distance = goal_markers[0]
-            
-            self.info(f"Closest person (ID: {closest_face_id}) is {distance:.2f} m away")
-            
-            # If person is close enough and we're not already greeting them
-            if distance < self.greeting_distance_threshold and self.current_task != 'greeting':
-                self.info(f"Person detected within greeting range! Interrupting navigation to greet.")
-                
-                # Interrupt current navigation
-                if self.result_future:
-                    self.debug("_check_for_nearby_people: Cancelling current task because of check for nearby people.")
-                    
-                    # Save values before cancellation for debugging
-                    self.debug(f"_check_for_nearby_people: Before cancellation - result_future: {self.result_future}, goal_handle: {self.goal_handle}")
-                    
-                    self.cancelTask()
-                    self.debug("_check_for_nearby_people: cancelTask() called.")
-                    
-                    # Check values after cancellation for debugging
-                    self.debug(f"_check_for_nearby_people: After cancellation - result_future: {self.result_future}, goal_handle: {self.goal_handle}")
-                else:
-                    self.debug("_check_for_nearby_people: No result_future, cannot cancel task.")
-                
-                # Set flag to greet this person
-                self.interrupt_for_greeting = True
-                self.debug(f"_check_for_nearby_people: interrupt_for_greeting set to True")
-                self.person_to_greet = {
-                    'face_id': closest_face_id,
-                    'goal_pos': goal_pos,
-                    'person_pos': person_markers.get(closest_face_id, None)
-                }
-                self.debug(f"_check_for_nearby_people: interrupt_for_greeting set to True, person_to_greet: {self.person_to_greet}")
-            else:
-                self.debug(f"_check_for_nearby_people: Person not within greeting range or already greeting. Distance: {distance:.2f}, current_task: {self.current_task}, threshold: {self.greeting_distance_threshold}")
-        else:
-            self.debug("_check_for_nearby_people: No goal markers found.") # Added debug log
-
+    
+    
     def sayGreeting(self, text=None):
         """Use text-to-speech to say greeting"""
         if text is None:
@@ -515,19 +435,6 @@ def main(args=None):
 
     rc.waitUntilNav2Active()
 
-    # while rc.is_docked is None:
-    #     rclpy.spin_once(rc, timeout_sec=0.5)
-
-    # if rc.is_docked:
-    #     rc.undock()
-    
-    # Read waypoints from the /global_path topic
-    #     waypoints = [
-    #     # (-1.0, 0.61, 1.57),  # Starting position         
-    #     (-1.74, 0.99, 1.57),          
-    #     (-0.913, 2.44, 1.57),       
-    #     (-1.99, 2.99, 1.57)          
-    # ]
     waypoints = []
 
     def global_path_callback(msg):
@@ -562,90 +469,46 @@ def main(args=None):
     while rc.current_waypoint_idx < len(waypoints):
         # Process any pending callbacks
         rclpy.spin_once(rc, timeout_sec=0.1)
+                    # Get current waypoint
+        x, y, yaw = waypoints[rc.current_waypoint_idx]
         
-        # If we're interrupting to greet a person
-        if rc.interrupt_for_greeting:
-            rc.info("Interrupting waypoint navigation to greet a person")
-            rc.debug(f"main: interrupt_for_greeting is True, current_task: {rc.current_task}")
+        rc.info(f"Navigating to waypoint {rc.current_waypoint_idx + 1}/{len(waypoints)}: ({x}, {y})")
+        
+        # Create the goal pose
+        goal_pose = PoseStamped()
+        goal_pose.header.frame_id = 'map'
+        goal_pose.header.stamp = rc.get_clock().now().to_msg()
+        
+        goal_pose.pose.position.x = x
+        goal_pose.pose.position.y = y
+        goal_pose.pose.orientation = rc.YawToQuaternion(yaw)
+        
+        # Set current task
+        rc.current_task = 'waypoint'
+        
+        # Send navigation command
+        rc.goToPose(goal_pose)
+        
+        # Wait for completion or interruption
+        while not rc.isTaskComplete():
+            rc.info(f"Moving to waypoint {rc.current_waypoint_idx + 1}...")
+            rclpy.spin_once(rc, timeout_sec=0.5)
+            time.sleep(0.5)
+        
+
+            rc.info(f"Reached waypoint {rc.current_waypoint_idx + 1}!")
             
-            # Navigate to the person's goal position
-            rc.debug("main: About to call navigate_to_person")
-            nav_result = rc.navigate_to_person(rc.person_to_greet['goal_pos'])
-            rc.debug(f"main: navigate_to_person returned: {nav_result}")
-            
-            if nav_result:
-                # Wait for navigation to complete
+            # Optional: spin at each waypoint to look around
+            if rc.current_waypoint_idx < len(waypoints) - 1:  # Don't spin at the last waypoint
+                rc.info("Spinning to look around...")
+                #rc.spin(6.28)  # Spin 360 degrees
                 while not rc.isTaskComplete():
-                    rc.info("Moving to greet person...")
                     rclpy.spin_once(rc, timeout_sec=0.5)
                     time.sleep(0.5)
-                
-                # Say greeting
-                rc.info("Reached person! Saying greeting...")
-                rc.sayGreeting()
 
-                
-                # Mark this face as greeted
-                rc.greeted_faces.add(rc.person_to_greet['face_id'])
-                
-                # Optional: Wait a moment after greeting
-                time.sleep(2.0)
-                
-                rc.info("Greeting complete, resuming waypoint navigation")
-            else:
-                rc.warn("Failed to start navigation to person.")
-                rc.debug(f"main: Failed to navigate to person, state: result_future={rc.result_future}, goal_handle={rc.goal_handle}")
-            
-            # Reset interrupt flag
-            rc.interrupt_for_greeting = False
-            rc.current_task = None
-            rc.debug("main: interrupt_for_greeting reset to False, current_task reset to None.")
-            
-        # Otherwise, continue with waypoint navigation
-        else:
-            # Get current waypoint
-            x, y, yaw = waypoints[rc.current_waypoint_idx]
-            
-            rc.info(f"Navigating to waypoint {rc.current_waypoint_idx + 1}/{len(waypoints)}: ({x}, {y})")
-            
-            # Create the goal pose
-            goal_pose = PoseStamped()
-            goal_pose.header.frame_id = 'map'
-            goal_pose.header.stamp = rc.get_clock().now().to_msg()
-            
-            goal_pose.pose.position.x = x
-            goal_pose.pose.position.y = y
-            goal_pose.pose.orientation = rc.YawToQuaternion(yaw)
-            
-            # Set current task
-            rc.current_task = 'waypoint'
-            
-            # Send navigation command
-            rc.goToPose(goal_pose)
-            
-            # Wait for completion or interruption
-            while not rc.isTaskComplete() and not rc.interrupt_for_greeting:
-                rc.info(f"Moving to waypoint {rc.current_waypoint_idx + 1}...")
-                rclpy.spin_once(rc, timeout_sec=0.5)
-                time.sleep(0.5)
-            
-            # If we completed the waypoint (not interrupted)
-            if not rc.interrupt_for_greeting:
-                rc.info(f"Reached waypoint {rc.current_waypoint_idx + 1}!")
-                
-                # Optional: spin at each waypoint to look around
-                if rc.current_waypoint_idx < len(waypoints) - 1:  # Don't spin at the last waypoint
-                    rc.info("Spinning to look around...")
-                    #rc.spin(6.28)  # Spin 360 degrees
-                    while not rc.isTaskComplete() and not rc.interrupt_for_greeting:
-                        rclpy.spin_once(rc, timeout_sec=0.5)
-                        time.sleep(0.5)
-                
-                # Move to next waypoint if we weren't interrupted
-                if not rc.interrupt_for_greeting:
-                    rc.current_waypoint_idx += 1
-                    rc.current_task = None
-    
+                rc.current_waypoint_idx += 1
+                rc.current_task = None
+
     rc.info("Completed all waypoints!")
     
     # Optional: return to starting position
