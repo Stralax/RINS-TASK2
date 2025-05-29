@@ -114,18 +114,47 @@ class SkeletonizedPath(Node):
         
         return cleaned_image
     
+    def find_junction_points(self, skeleton):
+        """Find junction points (branch points) in the skeleton, ensuring only one point per junction area."""
+        h, w = skeleton.shape
+        junction_points = []
+        # Keep track of areas that have been marked as junctions
+        processed_areas = np.zeros_like(skeleton, dtype=bool)
+        
+        # Define neighborhood distance (how close can two junction points be)
+        neighborhood_distance = 5  # pixels
+        
+        # First pass: find all potential junction points
+        potential_junctions = []
+        for y in range(1, h-1):
+            for x in range(1, w-1):
+                if skeleton[y, x]:
+                    # Count neighbors in the 3x3 neighborhood
+                    neighbors = np.sum(skeleton[y-1:y+2, x-1:x+2]) - 1  # -1 to exclude the center pixel
+                    if neighbors > 2:  # More than 2 neighbors means it's a junction
+                        potential_junctions.append((x, y))
+        
+        # Second pass: filter to keep only one point per junction area
+        for x, y in potential_junctions:
+            # Skip if this area has already been processed
+            if processed_areas[y, x]:
+                continue
+                
+            # Mark this junction point
+            junction_points.append((x, y))
+            
+            # Mark the neighborhood as processed to avoid placing more waypoints nearby
+            y_min = max(0, y - neighborhood_distance)
+            y_max = min(h, y + neighborhood_distance + 1)
+            x_min = max(0, x - neighborhood_distance)
+            x_max = min(w, x + neighborhood_distance + 1)
+            processed_areas[y_min:y_max, x_min:x_max] = True
+        
+        self.get_logger().info(f"Found {len(junction_points)} unique junction points in the skeleton")
+        return np.array(junction_points) if junction_points else np.empty((0, 2), dtype=int)
+
     def generate_skeleton_path(self, image):
         """Generate a skeletonized path from the map image."""
-        # Convert image to binary (free space = 1, obstacles = 0)
-        # Assuming that obstacles are black (value < 50)
-        # binary_map = (image > 245).astype(np.uint8)
-        # self.get_logger().info(f"Binary map shape: {binary_map.shape}, unique values: {np.unique(binary_map)}")
-        
-        # # Dilate obstacles for safety
-        # SE = np.ones((self.dilation_pixels, self.dilation_pixels), dtype=bool)
-        # dilated_obstacles = binary_dilation(~binary_map, SE)
-        # safe_space = ~dilated_obstacles
-        
         # Apply skeletonization
         new_space = self.clean_image(image)
         # Save the cleaned image for visualization
@@ -145,6 +174,9 @@ class SkeletonizedPath(Node):
         y_indices, x_indices = np.where(skeleton)
         path_points = np.column_stack((x_indices, y_indices))
         
+        # Find junction points in the skeleton
+        junction_points = self.find_junction_points(skeleton)
+        
         # Save the skeleton on the map image for visualization
         output_image = (new_space).astype(np.uint8) * 255  # Convert dilated space to grayscale
         output_image[skeleton] = 0  # Mark skeleton with black
@@ -159,26 +191,28 @@ class SkeletonizedPath(Node):
         
         self.get_logger().info(f"Skeleton path saved to {output_path}")
         
-        # Thin out the path points to reduce computational load
-        # Take every nth point (adjust as needed)
-        # Order the path points by x-coordinate first
-        path_points = path_points[np.argsort(path_points[:, 0])]
-        sparse_path = path_points[::23]
-        if len(sparse_path) < 10:  # If too few points after thinning, use all
-            sparse_path = path_points
+        # Use only junction points as waypoints - no fallbacks
+        waypoints = junction_points
+        
+        if len(waypoints) == 0:
+            self.get_logger().warn("No junction points found in the skeleton. Path will be empty.")
+        else:
+            self.get_logger().info(f"Using {len(waypoints)} junction points as waypoints")
             
-
         # Save the published path points on the map image for visualization
-        # Convert grayscale to RGB for colored visualization
         output_image_with_path = (image > 245).astype(np.uint8) * 255  # Convert map to grayscale
         output_image_with_path = cv2.cvtColor(output_image_with_path, cv2.COLOR_GRAY2RGB)
         
-        # Draw red dots for path points
-        for point in sparse_path:
+        # Draw skeleton in gray
+        for y, x in zip(y_indices, x_indices):
+            output_image_with_path[y, x] = [150, 150, 150]  # Gray color
+        
+        # Draw green dots for junction points (which are our waypoints) - exactly 1 pixel each
+        for point in junction_points:
             x_pixel = int(point[0])
             y_pixel = int(point[1])
-            # Draw a small red circle at each path point
-            cv2.circle(output_image_with_path, (x_pixel, y_pixel), 2, (255, 0, 0), -1)  # Red color, filled circle
+            # Set exactly one pixel to green for each junction point
+            output_image_with_path[y_pixel, x_pixel] = [0, 255, 0]  # Green color, single pixel
         
         # Save the modified image to a new file (using PNG for color support)
         output_path_with_points = self.map_image_path.replace('.pgm', '_path_points.png')
@@ -186,7 +220,7 @@ class SkeletonizedPath(Node):
         
         self.get_logger().info(f"Path points saved to {output_path_with_points}")
 
-        return sparse_path
+        return waypoints
 
     def order_path_points(self, points):
         """Order path points to form a continuous path."""
@@ -306,4 +340,3 @@ def main(args=None):
 
 if __name__ == "__main__":
     main()
-    
