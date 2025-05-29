@@ -16,7 +16,7 @@ class SkeletonizedPath(Node):
         super().__init__('skeletonized_path')
 
         # Declare parameters
-        self.declare_parameter('map_image_path', '/home/beta/Desktop/RINS-TASK2/dis_tutorial3/maps/map.pgm')
+        self.declare_parameter('map_image_path', '/home/beta/RINS-TASK2/dis_tutorial3/maps/map.pgm')
         self.declare_parameter('path_topic', '/global_path')
         self.declare_parameter('dilation_pixels', 7)
         self.declare_parameter('resolution', 0.05)  # Map resolution in meters/pixel
@@ -218,29 +218,149 @@ class SkeletonizedPath(Node):
         output_path_with_points = self.map_image_path.replace('.pgm', '_path_points.png')
         cv2.imwrite(output_path_with_points, output_image_with_path)
         
+        # Create a high-contrast visualization
+        high_contrast_img = np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
+        
+        # Fill background with white
+        high_contrast_img.fill(255)
+        
+        # Draw skeleton in blue
+        for y, x in zip(y_indices, x_indices):
+            high_contrast_img[y, x] = [255, 0, 0]  # Blue for skeleton
+        
+        # Draw junction points in green with larger circles for better visibility
+        for point in junction_points:
+            x_pixel = int(point[0])
+            y_pixel = int(point[1])
+            cv2.circle(high_contrast_img, (x_pixel, y_pixel), 3, (0, 255, 0), -1)  # Green circles
+        
+        # Save the high contrast visualization
+        high_contrast_path = self.map_image_path.replace('.pgm', '_high_contrast.png')
+        cv2.imwrite(high_contrast_path, high_contrast_img)
+        
+        self.get_logger().info(f"Saved high contrast visualization to {high_contrast_path}")
         self.get_logger().info(f"Path points saved to {output_path_with_points}")
 
         return waypoints
 
     def order_path_points(self, points):
-        """Order path points to form a continuous path."""
+        """Order path points to form a continuous path and visualize the ordering."""
         if len(points) < 2:
             return points
-            
-        # Start with the first point
-        ordered = [points[0]]
-        remaining = list(points[1:])
         
-        # Greedy nearest neighbor
-        while remaining:
+        # Convert points to a list of tuples for easier handling
+        points_list = [tuple(map(int, p)) for p in points]
+                
+        # Find the lowest point (highest y-coordinate in image coordinates)
+        lowest_idx = np.argmax([p[1] for p in points_list])
+        start_point = points[lowest_idx]
+        self.get_logger().info(f"Starting path from lowest point at ({points_list[lowest_idx][0]}, {points_list[lowest_idx][1]})")
+        
+        # Start with the lowest point
+        ordered = [start_point]
+        remaining = np.delete(points, lowest_idx, axis=0)  # Remove by index instead of value
+        
+        # For the second point, prioritize going left (points with lower x-coordinate)
+        if len(remaining) > 0:
+            # Get current x-coordinate
+            current_x = ordered[0][0]
+            
+            # Find points to the left of current point
+            left_points_mask = remaining[:, 0] < current_x
+            
+            if np.any(left_points_mask):
+                # Filter points to the left
+                left_points = remaining[left_points_mask]
+                
+                # Among left points, find the closest one
+                current = ordered[0]
+                distances = np.sqrt(np.sum((left_points - current)**2, axis=1))
+                idx = np.argmin(distances)
+                
+                # Add closest left point to ordered list
+                ordered.append(left_points[idx])
+                
+                # Remove the selected point from remaining
+                selected_point = left_points[idx]
+                remaining = np.array([p for p in remaining if not np.array_equal(p, selected_point)])
+                self.get_logger().info(f"Selected left point at ({selected_point[0]}, {selected_point[1]}) as second waypoint")
+            else:
+                self.get_logger().warn("No points to the left of start point. Using standard nearest neighbor.")
+        
+        # Continue with greedy nearest neighbor for remaining points
+        while len(remaining) > 0:
             current = ordered[-1]
             # Find index of closest point
-            distances = np.sqrt(np.sum((np.array(remaining) - current)**2, axis=1))
+            distances = np.sqrt(np.sum((remaining - current)**2, axis=1))
             idx = np.argmin(distances)
             # Add closest point to ordered list
-            ordered.append(remaining.pop(idx))
+            ordered.append(remaining[idx])
+            remaining = np.delete(remaining, idx, axis=0)  # Remove by index
+        
+        # Add the starting point at the end to create a loop
+        ordered.append(start_point)
+        self.get_logger().info("Added starting point at the end to create a closed loop")
+        
+        ordered_points = np.array(ordered)
+        
+        # Create visualization of the ordered path
+        try:
+            # Try to load the high contrast image if it exists
+            path_vis = cv2.imread(self.map_image_path.replace('.pgm', '_high_contrast.png'))
+            if path_vis is None:
+                # If it doesn't exist, create a new image
+                path_vis = np.zeros((points[0].shape[0] * 2, points[0].shape[1] * 2, 3), dtype=np.uint8)
+                path_vis.fill(255)  # White background
+                
+                # If we have the skeleton data, draw it
+                if hasattr(self, 'skeleton_indices'):
+                    y_indices, x_indices = self.skeleton_indices
+                    for y, x in zip(y_indices, x_indices):
+                        if 0 <= y < path_vis.shape[0] and 0 <= x < path_vis.shape[1]:
+                            path_vis[y, x] = [200, 200, 200]  # Light gray for skeleton
+        except Exception as e:
+            self.get_logger().warn(f"Could not load high contrast image: {e}. Creating new visualization.")
+            # Create a blank visualization
+            path_vis = np.ones((1000, 1000, 3), dtype=np.uint8) * 255
             
-        return np.array(ordered)
+            # Draw obstacles in black if we have the original image
+            try:
+                orig_img = self.read_pgm(self.map_image_path)
+                obstacles = orig_img < 245
+                for y in range(orig_img.shape[0]):
+                    for x in range(orig_img.shape[1]):
+                        if obstacles[y, x] and y < path_vis.shape[0] and x < path_vis.shape[1]:
+                            path_vis[y, x] = [0, 0, 0]  # Black for obstacles
+            except:
+                pass
+        
+        # Draw the ordered path
+        for i in range(len(ordered_points)-1):
+            p1 = (int(ordered_points[i][0]), int(ordered_points[i][1]))
+            p2 = (int(ordered_points[i+1][0]), int(ordered_points[i+1][1]))
+            
+            # Draw an arrow from p1 to p2 to show direction
+            cv2.arrowedLine(path_vis, p1, p2, (0, 0, 255), 2, tipLength=0.3)  # Red arrows
+            
+            # Add numbers to show order
+            cv2.putText(path_vis, str(i), (p1[0]+5, p1[1]+5), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+        
+        # Highlight both the start/end point with a special marker
+        if len(ordered_points) > 0:
+            start_p = (int(ordered_points[0][0]), int(ordered_points[0][1]))
+            cv2.circle(path_vis, start_p, 8, (0, 255, 255), -1)  # Larger yellow circle for start
+            
+            # Add a special marker to indicate it's both start and end
+            cv2.putText(path_vis, "START/END", (start_p[0]+10, start_p[1]), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        
+        # Save the visualization
+        vis_path = self.map_image_path.replace('.pgm', '_path_order.png')
+        cv2.imwrite(vis_path, path_vis)
+        self.get_logger().info(f"Saved path ordering visualization to {vis_path}")
+        
+        return ordered_points
 
     def publish_path(self, path_points):
         """Publish the path as a nav_msgs/Path message with correct coordinate transformation."""

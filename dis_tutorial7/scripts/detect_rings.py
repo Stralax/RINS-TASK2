@@ -14,11 +14,14 @@ from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 from tf2_ros import TransformException
 import tf2_geometry_msgs as tfg
-from geometry_msgs.msg import PointStamped, Vector3Stamped
+from geometry_msgs.msg import PointStamped, Vector3Stamped, Quaternion
 import rclpy.duration
 import time
 from collections import deque
 from dataclasses import dataclass
+
+from sklearn.decomposition import PCA
+import tf_transformations
 
 @dataclass
 class RingData:
@@ -28,7 +31,9 @@ class RingData:
     color_bgr: tuple      # BGR color tuple for visualization
     last_seen: float      # Timestamp when last detected
     announced: bool       # Whether this ring has been announced via speech
-
+    normal1: np.ndarray = None  # First normal direction
+    normal2: np.ndarray = None  # Second normal direction (opposite)
+    
 class RingDetector(Node):
     def __init__(self):
         super().__init__('ring_detector')
@@ -117,6 +122,35 @@ class RingDetector(Node):
         """Store the latest point cloud data"""
         self.pointcloud_data = data
 
+    def calculate_ring_normal(self, ring_points):
+        """Calculate the normal vector of a ring using PCA on the 3D points."""
+        if len(ring_points) < 3:
+            return None, None
+        
+        try:
+            # Convert to numpy array for PCA
+            points_array = np.array(ring_points)
+            
+            # Apply PCA to find normal vector
+            pca = PCA(n_components=3)
+            pca.fit(points_array)
+            
+            # The normal is the eigenvector corresponding to the smallest eigenvalue (3rd component)
+            normal = pca.components_[1]
+            
+            # Normalize the vector
+            normal = normal / np.linalg.norm(normal)
+            
+            # The second normal is just the negative of the first
+            normal2 = -normal
+            
+            self.get_logger().debug(f"Ring normal calculated: {normal}")
+            return normal, normal2
+            
+        except Exception as e:
+            self.get_logger().error(f"Error calculating ring normal: {e}")
+            return None, None
+
     def announce_ring_color(self, color_name):
         """Announce the detected ring color using TTS"""
         try:
@@ -168,7 +202,7 @@ class RingDetector(Node):
     def get_point_cloud_position(self, x, y, r):
         """Get 3D position of ring center from point cloud data"""
         if self.pointcloud_data is None:
-            return None
+            return None, None
             
         try:
             # Convert point cloud to numpy array
@@ -193,13 +227,13 @@ class RingDetector(Node):
             # If we have enough points, compute the median position
             if len(ring_points) >= 3:
                 ring_position = np.median(np.array(ring_points), axis=0)
-                return ring_position
+                return ring_position, ring_points
                 
-            return None
+            return None, None
                 
         except Exception as e:
             self.get_logger().error(f"Error extracting point cloud data: {e}")
-            return None
+            return None, None
 
     def is_hollow_ring(self, x, y, r, depth_map):
         """Check if ring is hollow by comparing center depth with perimeter depth."""
@@ -449,20 +483,33 @@ class RingDetector(Node):
                                     2)
                         
                         # Get 3D position from point cloud
-                        position_3d = self.get_point_cloud_position(x, y, r)
-                        
+                        position_3d, perimeter_points_3d = self.get_point_cloud_position(x, y, r)
                         if position_3d is not None:
                             # Transform to map frame
                             map_position = self.transform_point_to_map(position_3d)
                             
                             if map_position is not None:
+                                # Calculate normals if we have enough perimeter points
+                                if perimeter_points_3d and len(perimeter_points_3d) >= 3:
+                                    # Transform all perimeter points to map frame
+                                    map_perimeter_points = []
+                                    for point in perimeter_points_3d:
+                                        map_point = self.transform_point_to_map(point)
+                                        if map_point is not None:
+                                            map_perimeter_points.append(map_point)
+                                    
+                                    normal1, normal2 = self.calculate_ring_normal(map_perimeter_points)
+                                else:
+                                    normal1, normal2 = None, None
+                                
                                 self.get_logger().info(
                                     f"{color_name.upper()} hollow ring detected at "
                                     f"({x}, {y}) with radius {r}, map position: {map_position}"
+                                    f", normals: {normal1}, {normal2}"
                                 )
                                 
-                                # Store the ring data
-                                self.update_ring(map_position, r, color_name, color_bgr)
+                                # Store the ring data with normals
+                                self.update_ring(map_position, r, color_name, color_bgr, normal1, normal2)
                         else:
                             self.get_logger().info(
                                 f"{color_name.upper()} hollow ring detected at "
@@ -481,7 +528,7 @@ class RingDetector(Node):
         except Exception as e:
             self.get_logger().error(f"Unexpected error: {e}")
 
-    def update_ring(self, position, radius_px, color_name, color_bgr):
+    def update_ring(self, position, radius_px, color_name, color_bgr, normal1=None, normal2=None):
         """Update ring data in storage, create new entry if needed"""
         # Check if this ring is already in our dictionary by checking if it's near an existing ring
         matched_hash = None
@@ -500,10 +547,15 @@ class RingDetector(Node):
             self.rings[matched_hash].position = (1 - smoothing) * self.rings[matched_hash].position + smoothing * position
             self.rings[matched_hash].last_seen = current_time
             
-            # Check if we should announce this ring again (only if color changed or sufficient time passed)
+            # Update normals if available
+            if normal1 is not None and normal2 is not None:
+                self.rings[matched_hash].normal1 = normal1
+                self.rings[matched_hash].normal2 = normal2
+            
+            # Check if we should announce this ring again
             if (self.rings[matched_hash].color_name != color_name or 
-               (not self.rings[matched_hash].announced) or
-               (current_time - self.rings[matched_hash].last_seen > self.announce_cooldown)):
+            (not self.rings[matched_hash].announced) or
+            (current_time - self.rings[matched_hash].last_seen > self.announce_cooldown)):
                 self.announce_ring_color(color_name)
                 self.rings[matched_hash].announced = True
             
@@ -520,7 +572,9 @@ class RingDetector(Node):
                 color_name=color_name,
                 color_bgr=color_bgr,
                 last_seen=current_time,
-                announced=False
+                announced=False,
+                normal1=normal1,
+                normal2=normal2
             )
             # Announce new ring
             self.announce_ring_color(color_name)
@@ -601,6 +655,71 @@ class RingDetector(Node):
                 text_marker.lifetime.nanosec = int((self.marker_lifetime % 1) * 1e9)
             
             marker_array.markers.append(text_marker)
+            
+            # Add normal vector markers if available
+            if ring_data.normal1 is not None and ring_data.normal2 is not None:
+                # Helper function to create a quaternion from normal vector
+                def create_quat_from_normal(normal):
+                    # We'll use the normal vector as the z-axis
+                    z_axis = normal
+                    # Choose an arbitrary x-axis perpendicular to z
+                    x_axis = np.array([1.0, 0.0, 0.0]) if abs(normal[0]) < 0.9 else np.array([0.0, 1.0, 0.0])
+                    x_axis = x_axis - np.dot(x_axis, z_axis) * z_axis
+                    x_axis = x_axis / np.linalg.norm(x_axis)
+                    # Y-axis completes the right-handed coordinate system
+                    y_axis = np.cross(z_axis, x_axis)
+                    
+                    # Create rotation matrix [x_axis, y_axis, z_axis]
+                    rot_matrix = np.zeros((4, 4))
+                    rot_matrix[:3, 0] = x_axis
+                    rot_matrix[:3, 1] = y_axis
+                    rot_matrix[:3, 2] = z_axis
+                    rot_matrix[3, 3] = 1.0
+                    
+                    # Convert rotation matrix to quaternion
+                    q = tf_transformations.quaternion_from_matrix(rot_matrix)
+                    return Quaternion(x=q[0], y=q[1], z=q[2], w=q[3])
+                
+                # Create markers for both normal directions
+                for i, (normal, color) in enumerate([
+                    (ring_data.normal1, (0.0, 1.0, 0.0)), # Green for normal1
+                    (ring_data.normal2, (1.0, 0.0, 0.0))  # Red for normal2
+                ]):
+                    normal_marker = Marker()
+                    normal_marker.header.frame_id = "map"
+                    normal_marker.header.stamp = self.get_clock().now().to_msg()
+                    normal_marker.ns = "ring_normals"
+                    normal_marker.id = hash(ring_hash) % 10000 + i  # Use hash for ID + offset for direction
+                    normal_marker.type = Marker.ARROW
+                    normal_marker.action = Marker.ADD
+                    
+                    # Set position to ring center
+                    normal_marker.pose.position.x = ring_data.position[0]
+                    normal_marker.pose.position.y = ring_data.position[1]
+                    normal_marker.pose.position.z = ring_data.position[2]
+                    
+                    # Set orientation based on normal direction
+                    normal_marker.pose.orientation = create_quat_from_normal(normal)
+                    
+                    # Set arrow dimensions
+                    arrow_length = 0.1  # 10cm
+                    arrow_width = 0.01  # 1cm
+                    normal_marker.scale.x = arrow_length  # length
+                    normal_marker.scale.y = arrow_width   # width
+                    normal_marker.scale.z = arrow_width   # height
+                    
+                    # Set color
+                    normal_marker.color.r = color[0]
+                    normal_marker.color.g = color[1]
+                    normal_marker.color.b = color[2]
+                    normal_marker.color.a = 1.0
+                    
+                    # Set lifetime
+                    if self.marker_lifetime > 0:
+                        normal_marker.lifetime.sec = int(self.marker_lifetime)
+                        normal_marker.lifetime.nanosec = int((self.marker_lifetime % 1) * 1e9)
+                    
+                    marker_array.markers.append(normal_marker)
         
         # Publish the marker array
         self.marker_pub.publish(marker_array)

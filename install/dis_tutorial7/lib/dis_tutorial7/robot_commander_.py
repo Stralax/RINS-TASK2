@@ -636,7 +636,7 @@ def main(args=None):
                 # Optional: spin at each waypoint to look around
                 if rc.current_waypoint_idx < len(waypoints) - 1:  # Don't spin at the last waypoint
                     rc.info("Spinning to look around...")
-                    rc.spin(6.28)  # Spin 360 degrees
+                    #rc.spin(6.28)  # Spin 360 degrees
                     while not rc.isTaskComplete() and not rc.interrupt_for_greeting:
                         rclpy.spin_once(rc, timeout_sec=0.5)
                         time.sleep(0.5)
