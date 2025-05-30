@@ -68,6 +68,12 @@ class RingDetector(Node):
         self.marker_timer = self.create_timer(0.5, self.publish_ring_markers)
         # self.cleanup_timer = self.create_timer(5.0, self.cleanup_old_rings)
         
+        # Add robot position tracking
+        self.robot_position = np.array([0.0, 0.0, 0.0])  # Default position
+
+        # Add TF listener for robot position
+        self.tf_timer = self.create_timer(0.5, self.update_robot_position)
+
         # Path to the TTS script (assuming it's in the same directory as this script)
         script_dir = os.path.dirname(os.path.abspath(__file__))
         self.tts_script_path = os.path.join(script_dir, "speak.py")
@@ -122,6 +128,27 @@ class RingDetector(Node):
         """Store the latest point cloud data"""
         self.pointcloud_data = data
 
+    def update_robot_position(self):
+        """Update the robot's position in the map frame"""
+        try:
+            # Get transform from base_link to map
+            transform = self.tf_buffer.lookup_transform(
+                "map",
+                "base_link",
+                rclpy.time.Time(),
+                rclpy.duration.Duration(seconds=0.1)
+            )
+            
+            # Extract translation
+            self.robot_position = np.array([
+                transform.transform.translation.x,
+                transform.transform.translation.y,
+                transform.transform.translation.z
+            ])
+        except TransformException:
+            # Ignore transform errors
+            pass
+
     def calculate_ring_normal(self, ring_points):
         """Calculate the normal vector of a ring using PCA on the 3D points."""
         if len(ring_points) < 3:
@@ -136,17 +163,28 @@ class RingDetector(Node):
             pca.fit(points_array)
             
             # The normal is the eigenvector corresponding to the smallest eigenvalue (3rd component)
-            normal = pca.components_[1]
+            normal = pca.components_[2]
             
-            # Normalize the vector
+            # Calculate the ring center (mean of points)
+            center = np.mean(points_array, axis=0)
+            
+            # We need the normal to point outward from the center of the robot
+            # If we have the robot position, use that to orient the normal
+            if hasattr(self, 'robot_position'):
+                # Vector from robot to ring center
+                robot_to_ring = center - self.robot_position
+                # If normal is pointing away from robot, flip it
+                if np.dot(normal, robot_to_ring) < 0:
+                    normal = -normal
+            
+            # Normalize the normal vector
             normal = normal / np.linalg.norm(normal)
             
-            # The second normal is just the negative of the first
+            # The second normal is the negative of the first
             normal2 = -normal
             
             self.get_logger().debug(f"Ring normal calculated: {normal}")
             return normal, normal2
-            
         except Exception as e:
             self.get_logger().error(f"Error calculating ring normal: {e}")
             return None, None
@@ -383,10 +421,10 @@ class RingDetector(Node):
             if r > max(g, b) + 5:  # R channel is stronger
                 return "red", (0, 0, 255)
                 
-        # YELLOW detection (improved)
-        if (15 <= h <= 35) and b_val > 128 and a > 128:
-            if r > b + 10 and g > b + 10:  # Both R and G channels are stronger than B
-                return "yellow", (0, 255, 255)
+        # # YELLOW detection (improved)
+        # if (15 <= h <= 35) and b_val > 128 and a > 128:
+        #     if r > b + 10 and g > b + 10:  # Both R and G channels are stronger than B
+        #         return "yellow", (0, 255, 255)
         
         # Fallback to RGB ratio analysis with more robust thresholds
         max_channel = max(r, g, b)
@@ -406,8 +444,8 @@ class RingDetector(Node):
             elif g_ratio > 0.4 and g > r + 10 and g > b + 10:
                 return "green", (0, 255, 0)
             elif r_ratio > 0.4 and r > b + 10:
-                if r_ratio > 0.5 and g_ratio > 0.5 and g > b + 10:
-                    return "yellow", (0, 255, 255)
+                # if r_ratio > 0.5 and g_ratio > 0.5 and g > b + 10:
+                #     return "yellow", (0, 255, 255)
                 return "red", (0, 0, 255)
         
         # Final check for dark colors before returning unknown
@@ -699,11 +737,13 @@ class RingDetector(Node):
                     normal_marker.pose.position.z = ring_data.position[2]
                     
                     # Set orientation based on normal direction
+                    normal = normal / np.linalg.norm(normal)  # Normalize the normal vector
+                    # normal = -normal
                     normal_marker.pose.orientation = create_quat_from_normal(normal)
                     
                     # Set arrow dimensions
-                    arrow_length = 0.1  # 10cm
-                    arrow_width = 0.01  # 1cm
+                    arrow_length = 0.5# 10cm
+                    arrow_width = 0.05  # 1cm
                     normal_marker.scale.x = arrow_length  # length
                     normal_marker.scale.y = arrow_width   # width
                     normal_marker.scale.z = arrow_width   # height
