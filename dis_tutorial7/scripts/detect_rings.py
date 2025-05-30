@@ -568,6 +568,11 @@ class RingDetector(Node):
 
     def update_ring(self, position, radius_px, color_name, color_bgr, normal1=None, normal2=None):
         """Update ring data in storage, create new entry if needed"""
+        # Filter out rings where y-coordinate is greater than -1.00 in map frame
+        if position[1] < -1.00 or position[0] < -4.50:
+            self.get_logger().info(f"Rejecting {color_name} ring at {position}")
+            return
+        
         # Check if this ring is already in our dictionary by checking if it's near an existing ring
         matched_hash = None
         for ring_hash, ring_data in self.rings.items():
@@ -617,6 +622,8 @@ class RingDetector(Node):
             # Announce new ring
             self.announce_ring_color(color_name)
             self.rings[pos_hash].announced = True
+            
+            self.get_logger().info(f"Added new {color_name} ring at {position} with Y={position[1]}")
 
     def cleanup_old_rings(self):
         """Remove rings that haven't been seen recently"""
