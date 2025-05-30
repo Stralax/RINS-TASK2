@@ -178,7 +178,7 @@ class DetectFaces(Node):
         # Parameters
         self.neighborhood_radius = 1.0  # meters for point cloud neighborhood
         self.clustering_distance = 0.8  # meters for DBSCAN clustering
-        self.face_distance_threshold = 0.5  # meters for determining if a face is new
+        self.face_distance_threshold = 2.0  # meters for determining if a face is new
         self.min_points_for_face = 5  # Minimum points to represent a valid face
         self.next_face_id = 0  # Counter for face IDs
 
@@ -686,7 +686,7 @@ class DetectFaces(Node):
             face_marker = Marker()
             face_marker.header.frame_id = "map"
             face_marker.header.stamp = self.get_clock().now().to_msg()
-            face_marker.ns = "face_positions"
+            face_marker.ns = "face"  # Use "face" namespace for all face markers
             face_marker.id = face_id
             face_marker.type = Marker.SPHERE
             face_marker.action = Marker.ADD
@@ -696,16 +696,23 @@ class DetectFaces(Node):
             face_marker.pose.orientation.w = 1.0
             face_marker.scale.x = face_marker.scale.y = face_marker.scale.z = 0.15
             
-            # Different colors for new vs. known faces
-            if face_data.is_new:
-                face_marker.color.r = 0.0
-                face_marker.color.g = 1.0
-                face_marker.color.b = 0.0
-            else:
+            # Different colors based on gender
+            if face_data.gender == "Female":
                 face_marker.color.r = 1.0
+                face_marker.color.g = 0.0
+                face_marker.color.b = 1.0  # Purple for female
+            elif face_data.gender == "Male":
+                face_marker.color.r = 0.0
+                face_marker.color.g = 0.0
+                face_marker.color.b = 1.0  # Blue for male
+            else:  # Unknown
+                face_marker.color.r = 0.7
                 face_marker.color.g = 0.7
-                face_marker.color.b = 0.0
+                face_marker.color.b = 0.7  # Gray for unknown
             face_marker.color.a = 0.8
+            
+            # Store gender as a string in the marker description
+            face_marker.text = face_data.gender
             
             # Set lifetime if configured
             if self.marker_lifetime > 0:
@@ -714,7 +721,7 @@ class DetectFaces(Node):
             
             marker_array.markers.append(face_marker)
             
-            # ID text marker
+            # ID text marker - include gender information
             text_marker = Marker()
             text_marker.header.frame_id = "map"
             text_marker.header.stamp = self.get_clock().now().to_msg()
@@ -731,13 +738,14 @@ class DetectFaces(Node):
             text_marker.color.g = 1.0
             text_marker.color.b = 1.0
             text_marker.color.a = 0.8
-            text_marker.text = f"ID: {face_id})"
+            text_marker.text = f"ID: {face_id} ({face_data.gender})"
             
             if self.marker_lifetime > 0:
                 text_marker.lifetime.sec = int(self.marker_lifetime)
                 text_marker.lifetime.nanosec = int((self.marker_lifetime % 1) * 1e9)
             
             marker_array.markers.append(text_marker)
+
             
             # Direction marker (arrow)
             direction_marker = Marker()

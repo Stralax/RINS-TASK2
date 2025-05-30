@@ -352,8 +352,14 @@ class RobotCommander(Node):
         
         # Log the details of each marker
         for marker in msg.markers:
-            self.debug(f"_peopleMarkerCallback: Received marker - NS: {marker.ns}, ID: {marker.id}, Pose: {marker.pose}")
-    
+            # Extract gender from marker text if available
+            marker_gender = "Unknown"
+            if hasattr(marker, 'text') and marker.text:
+                self.debug(f"Marker text: {marker.text}")
+                # The marker text format is expected to be the gender string (Male/Female/Unknown)
+                marker_gender = marker.text
+                
+            self.debug(f"_peopleMarkerCallback: Received marker - NS: {marker.ns}, ID: {marker.id}, Gender: {marker_gender}, Pose: {marker.pose}")    
     
     def sayGreeting(self, text=None):
         """Use text-to-speech to say greeting"""
@@ -496,14 +502,21 @@ def main(args=None):
             
             # While moving, collect face information
             if rc.detected_person_markers:
-                for marker in rc.detected_person_markers.markers:
-                    # Check if it's a face marker
-                    if marker.ns == "face":
-                        face_id = marker.id
-                        face_pos = np.array([marker.pose.position.x, marker.pose.position.y])
-                        # Store face position in map coordinates
-                        detected_faces[face_id] = face_pos
-                        rc.info(f"Detected face ID {face_id} at position {face_pos}")
+                 for marker in rc.detected_person_markers.markers:
+                    face_id = marker.id
+                    face_pos = np.array([marker.pose.position.x, marker.pose.position.y])
+                    
+                    # Extract gender from marker.text
+                    gender = "Unknown"
+                    if hasattr(marker, 'text') and marker.text:
+                        gender = marker.text
+                    
+                    # Store face position and gender in map coordinates
+                    detected_faces[face_id] = {
+                        'position': face_pos,
+                        'gender': gender
+                    }
+                    rc.info(f"Detected face ID {face_id} at position {face_pos}, gender: {gender}")
             
             time.sleep(0.5)
         
@@ -539,11 +552,15 @@ def main(args=None):
             rc.info(f"Already greeted face ID {face_id}, skipping.")
             continue
             
-        rc.info(f"Moving to greet face ID {face_id} at position {face_position}")
-        
+        # Extract position and gender from the face data
+        face_position = face_data['position']
+        face_gender = face_data.get('gender', 'Unknown')
+
+        rc.info(f"Moving to greet face ID {face_id} at position {face_position}, gender: {face_gender}")
+
         # Calculate approach position (slightly before the face)
         approach_distance = 1.0  # meters
-        
+
         # If we have current robot position from AMCL
         if hasattr(rc, 'current_pose'):
             robot_pos = np.array([rc.current_pose.position.x, rc.current_pose.position.y])
@@ -555,43 +572,45 @@ def main(args=None):
             # Fallback: just go 1 meter in front of face along X axis
             goal_pos = face_position.copy()
             goal_pos[0] -= approach_distance
-        
+
         # Set up person to greet
         rc.person_to_greet = {
             'face_id': face_id,
-            'person_pos': face_position
+            'person_pos': face_position,
+            'gender': face_gender
         }
-        
+
         # Create the goal pose
         goal_pose = PoseStamped()
         goal_pose.header.frame_id = 'map'
         goal_pose.header.stamp = rc.get_clock().now().to_msg()
-        
+
         goal_pose.pose.position.x = goal_pos[0]
         goal_pose.pose.position.y = goal_pos[1]
         goal_pose.pose.position.z = 0.0
-        
+
         # Calculate orientation to face the person
         direction = face_position - goal_pos
         yaw = np.arctan2(direction[1], direction[0])
         goal_pose.pose.orientation = rc.YawToQuaternion(yaw)
-        
+
         # Set current task
         rc.current_task = 'greeting'
-        
+
         # Navigate to the greeting position
         rc.goToPose(goal_pose)
-        
+
         # Wait for completion
         while not rc.isTaskComplete():
             rclpy.spin_once(rc, timeout_sec=0.5)
             time.sleep(0.5)
-        
-        # Greet the person
-        rc.sayGreeting(f"Hello there! Nice to meet you, person number {face_id}!")
+
+        # Greet the person using gender information
+        greeting_text = f"Hello {face_gender}! Nice to meet you, person number {face_id}!"
+        rc.sayGreeting(greeting_text)
         rc.greeted_faces.add(face_id)
-        rc.info(f"Greeted face ID {face_id}")
-        
+        rc.info(f"Greeted face ID {face_id} as {face_gender}")
+
         # Wait a moment after greeting
         time.sleep(2.0)
     
