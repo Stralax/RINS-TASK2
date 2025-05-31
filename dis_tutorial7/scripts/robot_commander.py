@@ -772,7 +772,8 @@ def main(args=None):
             time.sleep(0.5)
         
         rc.info(f"Reached waypoint {rc.current_waypoint_idx + 1}!")
-        
+        # rc.spin(6.28)  # Spin to look around
+
         # Look for rings at each waypoint
         # After reaching each waypoint, check for nearby rings before moving to the next waypoint
         rc.info(f"Checking for rings at waypoint {rc.current_waypoint_idx + 1}...")
@@ -784,10 +785,11 @@ def main(args=None):
         # Process any new rings from the latest ring markers
         if rc.ring_markers:
             rclpy.spin_once(rc, timeout_sec=0.5)  # Process callbacks again after waiting
-
+    
         # Spin around to detect all rings at this waypoint
         rc.info("Spinning to look for rings...")
-        rc.spin(6.28)  # 360 degrees
+        rc.spin(-1.57/2)  # 360 degrees
+        rc.spin(3.14/2)  # 180 degrees
         while not rc.isTaskComplete():
             rclpy.spin_once(rc, timeout_sec=0.1)
             time.sleep(0.1)
@@ -881,8 +883,8 @@ def main(args=None):
                     break  # No more rings to approach
         else:
             rc.info(f"No rings detected at waypoint {rc.current_waypoint_idx + 1}")
-            rc.spin(-1.57)  # Spin to look around
-            rc.spin(3.14)
+            # rc.spin(6.28)  # Spin to look around
+            # rc.spin(3.14)
             
         # Check if we've found all 4 rings
         if len(rc.already_approached_rings) >= 4:

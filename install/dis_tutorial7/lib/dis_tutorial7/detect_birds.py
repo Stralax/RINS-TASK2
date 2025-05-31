@@ -241,7 +241,6 @@ class BirdDetector(Node):
                 # For standard model, filter only bird class
                 results = self.model.predict(
                     cv_image, 
-                    imgsz=640, # Resize to standard input size
                     conf=self.confidence_threshold, 
                     classes=[self.bird_class_id],
                     device=self.device,

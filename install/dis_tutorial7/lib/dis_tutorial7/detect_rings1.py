@@ -10,6 +10,7 @@ from sensor_msgs_py import point_cloud2 as pc2
 import subprocess
 import os
 from visualization_msgs.msg import Marker, MarkerArray
+
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 from tf2_ros import TransformException
@@ -20,6 +21,7 @@ import time
 from collections import deque
 from dataclasses import dataclass
 import tf_transformations
+from nav_msgs.msg import OccupancyGrid
 
 @dataclass
 class RingData:
@@ -37,6 +39,17 @@ class RingDetector(Node):
         self.bridge = CvBridge()
         
         # Subscriptions
+        self.costmap_data = None
+        self.costmap_metadata = None
+        # Create a one-time subscription to get the costmap
+        self.costmap_sub = self.create_subscription(
+            OccupancyGrid, 
+            "/global_costmap/costmap",  # This is the standard topic for global costmap
+            self._costmap_callback,
+            1
+        )
+        # self.get_logger().info("Subscribed to global costmap")
+
         self.image_sub = self.create_subscription(Image, "/top_camera/rgb/preview/image_raw", self.image_callback, 1)
         self.depth_sub = self.create_subscription(Image, "/top_camera/rgb/preview/depth", self.depth_callback, 1)
         self.pointcloud_sub = self.create_subscription(PointCloud2, "/top_camera/rgb/preview/depth/points", self.pointcloud_callback, 1)
@@ -353,10 +366,10 @@ class RingDetector(Node):
             if r > max(g, b) + 5:  # R channel is stronger
                 return "red", (0, 0, 255)
                 
-        # YELLOW detection (improved)
-        if (15 <= h <= 35) and b_val > 128 and a > 128:
-            if r > b + 10 and g > b + 10:  # Both R and G channels are stronger than B
-                return "yellow", (0, 255, 255)
+        # # YELLOW detection (improved)
+        # if (15 <= h <= 35) and b_val > 128 and a > 128:
+        #     if r > b + 10 and g > b + 10:  # Both R and G channels are stronger than B
+        #         return "yellow", (0, 255, 255)
         
         # Fallback to RGB ratio analysis with more robust thresholds
         max_channel = max(r, g, b)
@@ -375,10 +388,10 @@ class RingDetector(Node):
                 return "blue", (255, 0, 0)
             elif g_ratio > 0.4 and g > r + 10 and g > b + 10:
                 return "green", (0, 255, 0)
-            elif r_ratio > 0.4 and r > b + 10:
-                if r_ratio > 0.5 and g_ratio > 0.5 and g > b + 10:
-                    return "yellow", (0, 255, 255)
-                return "red", (0, 0, 255)
+            # elif r_ratio > 0.4 and r > b + 10:
+            #     if r_ratio > 0.5 and g_ratio > 0.5 and g > b + 10:
+            #         return "yellow", (0, 255, 255)
+            #     return "red", (0, 0, 255)
         
         # Final check for dark colors before returning unknown
         if max(r, g, b) < 60:  # Very low RGB values
@@ -558,6 +571,10 @@ class RingDetector(Node):
     def update_ring(self, position, radius_px, color_name, color_bgr, normal):
         """Update ring data in storage, create new entry if needed"""
         # Check if this ring is already in our dictionary by checking if it's near an existing ring
+        if position[1] < -1.00 or position[0] < -4.50:
+            self.get_logger().info(f"Rejecting {color_name} ring at {position}")
+            return
+        
         matched_hash = None
         for ring_hash, ring_data in self.rings.items():
             distance = np.linalg.norm(position - ring_data.position)
@@ -615,6 +632,160 @@ class RingDetector(Node):
             
         if keys_to_remove:
             self.get_logger().debug(f"Removed {len(keys_to_remove)} old rings")
+
+    def valid_position(self, pos1, pos2):
+        """Check if the position is not in the danger zone using global costmap data"""
+        try:
+            # Subscribe to the global costmap if we haven't already
+            if not hasattr(self, 'costmap_data'):
+                # Initialize costmap data storage
+                self.costmap_data = None
+                self.costmap_metadata = None
+                # Create a one-time subscription to get the costmap
+                self.costmap_sub = self.create_subscription(
+                    OccupancyGrid, 
+                    "/global_costmap/costmap",  # This is the standard topic for global costmap
+                    self._costmap_callback,
+                    1
+                )
+                self.get_logger().info("Subscribed to global costmap")
+            
+            # If we don't have costmap data yet, use the distance-based fallback
+            if self.costmap_data is None:
+                self.get_logger().warn("No costmap data available yet, using distance-based fallback")
+                return self._fallback_valid_position(pos1, pos2)
+            
+            # Check validity of both positions using the costmap
+            pos1_valid = self._check_costmap_position(pos1)
+            pos2_valid = self._check_costmap_position(pos2)
+            
+            # Log which positions are valid
+            self.get_logger().debug(f"Position 1 ({pos1[:2]}) valid: {pos1_valid}")
+            self.get_logger().debug(f"Position 2 ({pos2[:2]}) valid: {pos2_valid}")
+            
+            # Return the valid position or fallback if needed
+            if pos1_valid and not pos2_valid:
+                return pos1
+            elif pos2_valid and not pos1_valid:
+                return pos2
+            elif pos1_valid and pos2_valid:
+                # If both are valid, prefer position 2 (or you could choose based on other criteria)
+                return pos2
+            else:
+                # If both positions are invalid, try to find a nearby valid position
+                self.get_logger().warn("Both positions are invalid, finding closest valid position")
+                
+                # Try to find a valid position by stepping back from the ring
+                ring_pos = (pos1 + pos2) / 2.0  # Approximate ring position
+                
+                # Try different directions from the ring
+                for angle in np.linspace(0, 2*np.pi, 8, endpoint=False):
+                    for distance in [0.5, 0.7, 1.0, 1.5]:
+                        test_pos = ring_pos.copy()
+                        test_pos[0] += np.cos(angle) * distance
+                        test_pos[1] += np.sin(angle) * distance
+                        
+                        if self._check_costmap_position(test_pos):
+                            self.get_logger().info(f"Found valid fallback position at ({test_pos[0]:.2f}, {test_pos[1]:.2f})")
+                            return test_pos
+                
+                # If all else fails, return position 1 as fallback
+                self.get_logger().warn(f"Could not find valid position, returning pos1 as fallback")
+                return pos1
+        
+        except Exception as e:
+            self.get_logger().error(f"Error in valid_position: {e}")
+            return pos1
+
+    def _costmap_callback(self, msg):
+        """Store the latest costmap data"""
+        self.costmap_data = np.array(msg.data).reshape((msg.info.height, msg.info.width))
+        self.costmap_metadata = msg.info
+        self.get_logger().info(f"Received costmap: {msg.info.width}x{msg.info.height}, resolution: {msg.info.resolution}")
+        
+        # Unsubscribe after receiving the first costmap to save resources
+        # We can resubscribe later if needed for updates
+        self.destroy_subscription(self.costmap_sub)
+        delattr(self, 'costmap_sub')
+
+    def _check_costmap_position(self, position):
+        """Check if a position is valid according to the costmap"""
+        if self.costmap_data is None or self.costmap_metadata is None:
+            return True  # No costmap data, assume valid
+        
+        # Convert world coordinates to costmap grid coordinates
+        grid_x = int((position[0] - self.costmap_metadata.origin.position.x) / self.costmap_metadata.resolution)
+        grid_y = int((position[1] - self.costmap_metadata.origin.position.y) / self.costmap_metadata.resolution)
+        
+        # Check if coordinates are within the map bounds
+        if (0 <= grid_x < self.costmap_metadata.width and 
+            0 <= grid_y < self.costmap_metadata.height):
+            
+            # Get the cell value
+            cell_value = self.costmap_data[grid_y, grid_x]
+            
+            # In ROS costmaps:
+            # 0-254: Indicates the cost of occupancy (0 = free, 100+ = occupied, 254 = lethal)
+            # -1/255: Unknown
+            
+            # Free space has value 0, threshold is typically 50-60 for navigation
+            FREE_THRESHOLD = 50  # Values below this are considered free space
+            
+            # Position is valid if it's free space (below threshold)
+            is_valid = cell_value < FREE_THRESHOLD
+            
+            if not is_valid:
+                self.get_logger().debug(f"Position ({position[0]:.2f}, {position[1]:.2f}) has costmap value {cell_value}")
+            
+            return is_valid
+        
+        # Outside the map bounds
+        self.get_logger().warn(f"Position ({position[0]:.2f}, {position[1]:.2f}) is outside costmap bounds")
+        return False
+
+    def _fallback_valid_position(self, pos1, pos2):
+        """Fallback method using distance-based heuristics if costmap is unavailable"""
+        try:
+            # Use distances from current robot position as a simple heuristic
+            transform = self.tf_buffer.lookup_transform(
+                "base_link", 
+                "map",
+                rclpy.time.Time(),
+                rclpy.duration.Duration(seconds=0.2)
+            )
+            
+            # Get robot position in map frame
+            robot_x = transform.transform.translation.x
+            robot_y = transform.transform.translation.y
+            
+            # Calculate distance to robot for each position
+            dist1 = np.sqrt((pos1[0] - robot_x)**2 + (pos1[1] - robot_y)**2)
+            dist2 = np.sqrt((pos2[0] - robot_x)**2 + (pos2[1] - robot_y)**2)
+            
+            # Simple check: position is valid if it's not too close to the robot
+            # and not too far (which might indicate it's outside the map or in an obstacle)
+            MIN_DIST = 0.5  # Minimum safe distance from robot in meters
+            MAX_DIST = 3.0  # Maximum reasonable distance in meters
+            
+            pos1_valid = MIN_DIST <= dist1 <= MAX_DIST
+            pos2_valid = MIN_DIST <= dist2 <= MAX_DIST
+            
+            if pos1_valid and not pos2_valid:
+                return pos1
+            elif pos2_valid and not pos1_valid:
+                return pos2
+            elif pos1_valid and pos2_valid:
+                # If both are valid, prefer the one farther from robot for safety
+                return pos1 if dist1 > dist2 else pos2
+            else:
+                # If both invalid, use pos2 (consistent with original implementation)
+                return pos2
+                
+        except TransformException:
+            # If we can't get the transform, just return pos2
+            self.get_logger().warn("Could not get transform for position check, using pos2")
+            return pos2
+        
 
     def publish_ring_markers(self):
         """Publish markers for all tracked rings"""
@@ -683,8 +854,10 @@ class RingDetector(Node):
                 normal = ring_data.normal / np.linalg.norm(ring_data.normal)
                 
                 # Calculate point at ring_position + normal * 0.8
-                point_position = ring_data.position + normal * 0.8
+                point_position1 = ring_data.position - normal * 0.8
+                point_position2 = ring_data.position + normal * 0.8
                 
+                point_position = self.valid_position(point_position1, point_position2)  # Average position
                 # Create point marker
                 point_marker = Marker()
                 point_marker.header.frame_id = "map"
