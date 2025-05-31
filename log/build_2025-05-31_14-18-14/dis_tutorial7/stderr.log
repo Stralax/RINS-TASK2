@@ -1,0 +1,6 @@
+[31mCMake Error at cmake_install.cmake:59 (file):
+  file INSTALL cannot find
+  "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/detec_ring1.py": No
+  such file or directory.
+
+[0m

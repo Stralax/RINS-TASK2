@@ -57,11 +57,13 @@ endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/dis_tutorial7" TYPE PROGRAM FILES
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/detect_birds.py"
     "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/arm_mover_actions.py"
     "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/robot_commander.py"
     "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/follow_bridge.py"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/bird_classifier.py"
     "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/detect_people1.py"
-    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/detect_rings.py"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/detect_rings1.py"
     "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/skeletonized_path_2.py"
     "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/detect_classify_birds.py"
     )

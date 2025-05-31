@@ -39,14 +39,15 @@ install(DIRECTORY scripts/
         FILES_MATCHING PATTERN "*.txt")
 
 install(PROGRAMS
-  # scripts/detect_birds.py
+  scripts/detect_birds.py
   scripts/arm_mover_actions.py
   # scripts/robot_commander_.py
   scripts/robot_commander.py
   scripts/follow_bridge.py
-  # scripts/bird_classifier.py
+  scripts/bird_classifier.py
   scripts/detect_people1.py
-  scripts/detect_rings.py
+  # scripts/detect_rings.py
+  scripts/detect_rings1.py
   # scripts/skeletonized_path.py
   scripts/skeletonized_path_2.py
   scripts/detect_classify_birds.py

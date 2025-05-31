@@ -164,18 +164,19 @@ class RingDetector(Node):
             
             # The normal is the eigenvector corresponding to the smallest eigenvalue (3rd component)
             normal = pca.components_[2]
+            normal = np.cross(pca.components_[0], pca.components_[1])  # Ensure normal is perpendicular to the plane 
             
             # Calculate the ring center (mean of points)
             center = np.mean(points_array, axis=0)
             
             # We need the normal to point outward from the center of the robot
             # If we have the robot position, use that to orient the normal
-            if hasattr(self, 'robot_position'):
-                # Vector from robot to ring center
-                robot_to_ring = center - self.robot_position
-                # If normal is pointing away from robot, flip it
-                if np.dot(normal, robot_to_ring) < 0:
-                    normal = -normal
+            # if hasattr(self, 'robot_position'):
+            #     # Vector from robot to ring center
+            #     robot_to_ring = center - self.robot_position
+            #     # If normal is pointing away from robot, flip it
+            #     if np.dot(normal, robot_to_ring) < 0:
+            #         normal = -normal
             
             # Normalize the normal vector
             normal = normal / np.linalg.norm(normal)
@@ -249,24 +250,33 @@ class RingDetector(Node):
                 field_names=("x", "y", "z")
             ).reshape((self.pointcloud_data.height, self.pointcloud_data.width, 3))
             
-            # Sample points around the ring
+            # Sample points around the ring at two different radii
             ring_points = []
-            num_samples = 8
-            for angle in np.linspace(0, 2*np.pi, num_samples, endpoint=False):
-                px = int(x + r * 0.8 * np.cos(angle))  # Sample at 80% of radius to get on the ring
-                py = int(y + r * 0.8 * np.sin(angle))
-                
-                # Check if point is within image bounds
-                if 0 <= px < self.pointcloud_data.width and 0 <= py < self.pointcloud_data.height:
-                    point = pc_array[py, px]
-                    if np.isfinite(point).all() and not np.isnan(point).any():
-                        ring_points.append(point)
+            num_samples = 16  # Increased for better coverage
+            
+            # Sample at both 80% (inner edge) and 120% (outer edge) of the radius
+            sampling_radii = [0.8, 1.0, 1.2]
+            
+            for radius_factor in sampling_radii:
+                for angle in np.linspace(0, 2*np.pi, num_samples, endpoint=False):
+                    px = int(x + r * radius_factor * np.cos(angle))
+                    py = int(y + r * radius_factor * np.sin(angle))
+                    
+                    # Check if point is within image bounds
+                    if 0 <= px < self.pointcloud_data.width and 0 <= py < self.pointcloud_data.height:
+                        point = pc_array[py, px]
+                        if np.isfinite(point).all() and not np.isnan(point).any():
+                            ring_points.append(point)
             
             # If we have enough points, compute the median position
-            if len(ring_points) >= 3:
+            if len(ring_points) >= 9:  # Increased minimum number of points
                 ring_position = np.median(np.array(ring_points), axis=0)
                 return ring_position, ring_points
                 
+            return None, None
+                
+        except Exception as e:
+            self.get_logger().error(f"Error extracting point cloud data: {e}")
             return None, None
                 
         except Exception as e:
