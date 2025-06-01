@@ -1,9 +1,0 @@
-/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/CMakeFiles/uninstall.dir
-/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/CMakeFiles/dis_tutorial7_uninstall.dir
-/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/CMakeFiles/test.dir
-/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/CMakeFiles/edit_cache.dir
-/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/CMakeFiles/rebuild_cache.dir
-/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/CMakeFiles/list_install_components.dir
-/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/CMakeFiles/install.dir
-/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/CMakeFiles/install/local.dir
-/home/beta/RINS-TASK2/dis_tutorial7/build/dis_tutorial7/CMakeFiles/install/strip.dir

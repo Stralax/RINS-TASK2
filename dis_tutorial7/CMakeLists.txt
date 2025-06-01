@@ -46,6 +46,7 @@ install(PROGRAMS
   scripts/follow_bridge.py
   scripts/bird_classifier.py
   scripts/detect_people1.py
+  scripts/detect_rings_depth.py
   # scripts/detect_rings.py
   scripts/detect_rings1.py
   # scripts/skeletonized_path.py
