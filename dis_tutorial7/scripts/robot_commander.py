@@ -25,7 +25,7 @@ from lifecycle_msgs.srv import GetState
 from nav2_msgs.action import Spin, NavigateToPose
 from nav_msgs.msg import Path
 from turtle_tf2_py.turtle_tf2_broadcaster import quaternion_from_euler
-from visualization_msgs.msg import MarkerArray
+from visualization_msgs.msg import MarkerArray, Marker
 
 from irobot_create_msgs.action import Dock, Undock
 from irobot_create_msgs.msg import DockStatus
@@ -37,6 +37,10 @@ from rclpy.node import Node
 from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 from rclpy.qos import qos_profile_sensor_data
+
+from follow_bridge import BridgeFollower
+
+import nlp_test  # Import the nlp_test module
 
 
 class TaskResult(Enum):
@@ -108,6 +112,9 @@ class RobotCommander(Node):
         self.dock_action_client = ActionClient(self, Dock, 'dock')
 
         self.get_logger().info(f"Robot commander has been initialized!")
+        
+        # Initialize DialogueSystem instance
+        self.nlp_system = nlp_test.DialogueSystem()
         
     def destroyNode(self):
         self.nav_to_pose_client.destroy()
@@ -348,19 +355,120 @@ class RobotCommander(Node):
     def _peopleMarkerCallback(self, msg: MarkerArray):
         """Handle incoming people markers"""
         self.detected_person_markers = msg
-        self.info(f"Received people markers: {len(msg.markers)}")
+        self.info(f"Received {len(msg.markers)} markers from /people_array")
         
-        # Log the details of each marker
+        # Create/update dictionary of faces with their orientation and normal vector
+        self.detected_faces_info = {}
+        
+        # Log all marker namespaces to see what's available
+        marker_namespaces = set(marker.ns for marker in msg.markers)
+        self.info(f"Marker namespaces in message: {marker_namespaces}")
+        
+        # Process face position markers
         for marker in msg.markers:
-            # Extract gender from marker text if available
-            marker_gender = "Unknown"
-            if hasattr(marker, 'text') and marker.text:
-                self.debug(f"Marker text: {marker.text}")
-                # The marker text format is expected to be the gender string (Male/Female/Unknown)
-                marker_gender = marker.text
+            if marker.ns == "face":  # Face position markers
+                face_id = marker.id
+                face_pos = np.array([marker.pose.position.x, marker.pose.position.y])
+                orientation = marker.pose.orientation
                 
-            self.debug(f"_peopleMarkerCallback: Received marker - NS: {marker.ns}, ID: {marker.id}, Gender: {marker_gender}, Pose: {marker.pose}")    
-    
+                # Extract gender from marker text if available
+                gender = "Unknown"
+                if hasattr(marker, 'text') and marker.text:
+                    if '(' in marker.text and ')' in marker.text:
+                        gender = marker.text.split('(')[-1].split(')')[0]
+                    
+                # Initialize face info
+                self.detected_faces_info[face_id] = {
+                    'position': face_pos,
+                    'orientation': orientation,
+                    'gender': gender,
+                    'normal': None,  # Will be filled from face_directions marker
+                    'approach_vector': None,  # Will be calculated from normal
+                    'arrow_endpoint': None  # Will be calculated from normal and position
+                }
+                
+                self.info(f"Detected face marker - ID: {face_id}, Position: {face_pos}, Gender: {gender}")
+                
+        # Process face direction markers to get normal vectors
+        direction_markers_found = False
+        for marker in msg.markers:
+            if marker.ns == "face_directions":  # Direction arrow markers
+                direction_markers_found = True
+                face_id = marker.id
+                self.info(f"Found direction marker for face ID: {face_id}")
+                
+                if face_id in self.detected_faces_info:
+                    # Get the quaternion components
+                    qx = marker.pose.orientation.x
+                    qy = marker.pose.orientation.y
+                    qz = marker.pose.orientation.z
+                    qw = marker.pose.orientation.w
+                    self.info(f"Direction marker orientation - x:{qx} y:{qy} z:{qz} w:{qw}")
+                    
+                    # Get the arrow's starting position (same as face position)
+                    arrow_start = np.array([
+                        marker.pose.position.x,
+                        marker.pose.position.y,
+                        marker.pose.position.z
+                    ])
+                    
+                    # Convert quaternion to direction vector (forward vector)
+                    # This transforms the unit vector [1,0,0] by the quaternion
+                    # The resulting vector is the direction the person is facing
+                    
+                    # Unit vector pointing along x-axis (forward)
+                    v_orig = np.array([1.0, 0.0, 0.0])
+                    
+                    # Quaternion components
+                    q = np.array([qw, qx, qy, qz])
+                    
+                    # Calculate rotated vector
+                    v_rotated = self.rotate_vector_by_quaternion(v_orig, q)
+                    
+                    # Store the normal vector (direction the person is facing)
+                    self.detected_faces_info[face_id]['normal'] = v_rotated
+                    
+                    # Calculate approach vector (opposite of normal)
+                    approach_vector = -v_rotated  # Opposite direction
+                    self.detected_faces_info[face_id]['approach_vector'] = approach_vector
+                    
+                    # Calculate the endpoint of the arrow
+                    # The arrow length is typically 0.4 units in the marker
+                    arrow_length = 1.0  # Meters, adjust based on your needs
+                    arrow_endpoint = arrow_start + (v_rotated * arrow_length)
+                    self.detected_faces_info[face_id]['arrow_endpoint'] = arrow_endpoint
+                    
+                    self.info(f"Face {face_id} normal vector: {v_rotated}")
+                    self.info(f"Face {face_id} approach vector: {approach_vector}")
+                    self.info(f"Face {face_id} arrow endpoint: {arrow_endpoint}")
+                else:
+                    self.warn(f"Found direction marker for unknown face ID: {face_id}")
+        
+        if not direction_markers_found:
+            self.warn("No face_directions markers found in the message")
+
+    def rotate_vector_by_quaternion(self, v, q):
+        """
+        Rotate vector v by quaternion q
+        q is in form [w, x, y, z]
+        """
+        w, x, y, z = q
+        
+        # Direct calculation using quaternion formula
+        # This is more accurate than the cross product formula
+        # v' = q * v * q^(-1) where * is quaternion multiplication
+        
+        # First calculate rotated x
+        xx = w*w*v[0] + 2*y*w*v[2] - 2*z*w*v[1] + x*x*v[0] + 2*y*x*v[1] + 2*z*x*v[2] - z*z*v[0] - y*y*v[0]
+        
+        # Then rotated y
+        yy = 2*x*y*v[0] + y*y*v[1] + 2*z*y*v[2] + 2*w*z*v[0] - z*z*v[1] + w*w*v[1] - 2*x*w*v[2] - x*x*v[1]
+        
+        # Then rotated z
+        zz = 2*x*z*v[0] + 2*y*z*v[1] + z*z*v[2] - 2*w*y*v[0] - y*y*v[2] + 2*w*x*v[1] - x*x*v[2] + w*w*v[2]
+        
+        return np.array([xx, yy, zz])
+
     def sayGreeting(self, text=None):
         """Use text-to-speech to say greeting"""
         if text is None:
@@ -470,7 +578,7 @@ def main(args=None):
     rc.info("Phase 1: Starting navigation through waypoints...")
     detected_faces = {}  # Dictionary to store face_id -> position mapping
     
-    rc.current_waypoint_idx = 0
+    rc.current_waypoint_idx = 20
     
     while rc.current_waypoint_idx < len(waypoints):
         # Process any pending callbacks
@@ -509,13 +617,18 @@ def main(args=None):
                     # Extract gender from marker.text
                     gender = "Unknown"
                     if hasattr(marker, 'text') and marker.text:
-                        gender = marker.text
+                        # Extract gender from marker.text (e.g., "ID: 1 (Female)" -> "Female")
+                        if '(' in marker.text and ')' in marker.text:
+                            gender = marker.text.split('(')[-1].split(')')[0]
+                        else:
+                            gender = "Unknown"
                     
                     # Store face position and gender in map coordinates
-                    detected_faces[face_id] = {
-                        'position': face_pos,
-                        'gender': gender
-                    }
+                    if gender != "Unknown":
+                        detected_faces[face_id] = {
+                            'position': face_pos,
+                            'gender': gender
+                        }
                     rc.info(f"Detected face ID {face_id} at position {face_pos}, gender: {gender}")
             
             time.sleep(0.5)
@@ -524,8 +637,9 @@ def main(args=None):
         
         # Optional: spin at each waypoint to look around
         if rc.current_waypoint_idx < len(waypoints) - 1:  # Don't spin at the last waypoint
-            rc.info("Spinning to look around...")
-            rc.spin(6.28)  # Spin 360 degrees
+            # rc.info("Spinning to look around...")
+            # rc.spin(1.57)  # Spin 90 degrees
+            rc.spin(-1.57)  # Sping 180 degrees in the opposite direction
             while not rc.isTaskComplete():
                 rclpy.spin_once(rc, timeout_sec=0.5)
                 # Continue collecting face information during spin
@@ -547,31 +661,46 @@ def main(args=None):
     # Phase 2: Visit and greet each detected face
     rc.info("Phase 2: Starting face greeting sequence...")
     
-    for face_id, face_position in detected_faces.items():
+    for face_id, face_data in detected_faces.items():  # Correctly iterate over detected_faces
         if face_id in rc.greeted_faces:
             rc.info(f"Already greeted face ID {face_id}, skipping.")
             continue
             
         # Extract position and gender from the face data
-        face_position = face_data['position']
-        face_gender = face_data.get('gender', 'Unknown')
+        face_position = face_data['position']  # Correctly use face_data
+        face_gender = face_data['gender'] 
 
         rc.info(f"Moving to greet face ID {face_id} at position {face_position}, gender: {face_gender}")
 
-        # Calculate approach position (slightly before the face)
+        # By default, set a standard approach distance
         approach_distance = 1.0  # meters
-
-        # If we have current robot position from AMCL
-        if hasattr(rc, 'current_pose'):
-            robot_pos = np.array([rc.current_pose.position.x, rc.current_pose.position.y])
-            direction = face_position - robot_pos
-            direction_norm = direction / np.linalg.norm(direction)
-            # Calculate position 1 meter away from the face
-            goal_pos = face_position - direction_norm * approach_distance
+        goal_pos = None
+                
+        # Check if we have arrow endpoint information for this face
+        if hasattr(rc, 'detected_faces_info') and face_id in rc.detected_faces_info and rc.detected_faces_info[face_id]['arrow_endpoint'] is not None:
+            # Use the arrow endpoint as the navigation goal
+            arrow_endpoint = rc.detected_faces_info[face_id]['arrow_endpoint']
+            rc.info(f"NAVIGATION: Using arrow endpoint for face {face_id}")
+            rc.info(f"NAVIGATION: Face position: ({face_position[0]:.2f}, {face_position[1]:.2f})")
+            rc.info(f"NAVIGATION: Arrow endpoint: ({arrow_endpoint[0]:.2f}, {arrow_endpoint[1]:.2f}, {arrow_endpoint[2]:.2f})")
+            
+            # Use only the X and Y coordinates for navigation
+            goal_pos = np.array([arrow_endpoint[0], arrow_endpoint[1]])
+            rc.info(f"NAVIGATION: Setting navigation goal to arrow endpoint: ({goal_pos[0]:.2f}, {goal_pos[1]:.2f})")
         else:
-            # Fallback: just go 1 meter in front of face along X axis
-            goal_pos = face_position.copy()
-            goal_pos[0] -= approach_distance
+            # Fallback to standard approach position calculation
+            rc.info(f"NAVIGATION: No arrow endpoint available for face {face_id}, using standard approach calculation")
+            if hasattr(rc, 'current_pose'):
+                robot_pos = np.array([rc.current_pose.position.x, rc.current_pose.position.y])
+                direction = face_position - robot_pos
+                direction_norm = direction / np.linalg.norm(direction)
+                goal_pos = face_position - direction_norm * approach_distance
+                rc.info(f"NAVIGATION: Using robot position for approach: robot at ({robot_pos[0]:.2f}, {robot_pos[1]:.2f})")
+                rc.info(f"NAVIGATION: Calculated approach position: ({goal_pos[0]:.2f}, {goal_pos[1]:.2f})")
+            else:
+                goal_pos = face_position.copy()
+                goal_pos[0] -= approach_distance
+                rc.info(f"NAVIGATION: Using simple fallback: ({goal_pos[0]:.2f}, {goal_pos[1]:.2f})")
 
         # Set up person to greet
         rc.person_to_greet = {
@@ -603,17 +732,24 @@ def main(args=None):
         # Wait for completion
         while not rc.isTaskComplete():
             rclpy.spin_once(rc, timeout_sec=0.5)
-            time.sleep(0.5)
 
         # Greet the person using gender information
         greeting_text = f"Hello {face_gender}! Nice to meet you, person number {face_id}!"
-        rc.sayGreeting(greeting_text)
+
+        
+        # Call respective functions from nlp_test based on gender
+        if face_gender.lower() == "male":
+            rc.nlp_system.talk_to_male()
+        else:
+            rc.nlp_system.talk_to_female()
+        
+        # Mark greeting as complete
         rc.greeted_faces.add(face_id)
         rc.info(f"Greeted face ID {face_id} as {face_gender}")
 
-        # Wait a moment after greeting
-        time.sleep(2.0)
-    
+        # Transition to the next face
+        rc.current_task = None
+
     # Return to the starting waypoint (waypoint 0)
     if waypoints:
         rc.info("Returning to starting position (waypoint 0)...")
@@ -640,7 +776,28 @@ def main(args=None):
             time.sleep(0.5)
         
         rc.info("Returned to starting position!")
+
+
+
+    """Phase 3: Follow the bridge using BridgeFollower."""
+    rc.info("Phase 3: Starting bridge following sequence...")
+
+    # Initialize BridgeFollower node
+    follower = BridgeFollower()
     
+    try:
+        if follower.go_to_start_point(0.0, -0.8, 0.0, -0.9):
+            follower.get_logger().info("Starting bridge following...")
+            rclpy.spin(follower)
+    except Exception as e:
+        follower.get_logger().error(f"Error: {str(e)}")
+    finally:
+        follower.stop_robot()
+        follower.destroy_node()
+
+
+    rc.info("Bridge following completed!")
+
     rc.info("Mission completed successfully!")
     
     rc.destroyNode()

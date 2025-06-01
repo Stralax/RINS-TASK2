@@ -50,6 +50,7 @@ install(PROGRAMS
   # scripts/skeletonized_path.py
   scripts/skeletonized_path_2.py
   scripts/detect_classify_birds.py
+  scripts/nlp_test.py
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
