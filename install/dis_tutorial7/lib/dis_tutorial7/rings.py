@@ -184,7 +184,7 @@ class RingDetector(Node):
         )
         self.marker_array_pub = self.create_publisher(
             MarkerArray, 
-            "/circle_points", 
+            "/ring_markers", 
             10
         )
         self.costmap_sub = self.create_subscription(OccupancyGrid, "/global_costmap/costmap", self.global_cost_callback, qos_profile_sensor_data)
@@ -892,7 +892,7 @@ class RingDetector(Node):
         if center_x is None or center_y is None or center_z is None or center_z > 0.75:
             return
                                 
-        offset_length = 0.5  # Length of the offset vector
+        offset_length = 0.8 # Length of the offset vector
         offsetLevo = np.array([center_x, center_y, center_z]) + self.normal_normalized_new * offset_length
         qx, qy, qz, qw = self.calculate_orientation_quaternion(float(offsetLevo[0]), float(offsetLevo[1]), 
                                                                 float(center_x), float(center_y))
@@ -915,7 +915,7 @@ class RingDetector(Node):
         else:
             self.get_logger().warn("Offset points are outside the map boundaries.")
 
-        offset = np.array([center_x, center_y, center_z]) + self.normal_normalized_new * 0.5
+        offset = np.array([center_x, center_y, center_z]) + self.normal_normalized_new * offset_length
         qx, qy, qz, qw = self.calculate_orientation_quaternion(float(offset[0]), float(offset[1]), 
                                                                 float(center_x), float(center_y))
 
@@ -1028,7 +1028,8 @@ class RingDetector(Node):
         ring_marker = Marker()
         ring_marker.header.frame_id = "map"
         ring_marker.header.stamp = self.get_clock().now().to_msg()
-        ring_marker.id = 1000 + circle_id  # Unique ID for ring marker
+        ring_marker.id = circle_id  # Use circle_id directly
+        ring_marker.ns = "ring_positions"  # Add namespace
         ring_marker.type = Marker.SPHERE
         ring_marker.action = Marker.ADD
         
@@ -1059,7 +1060,7 @@ class RingDetector(Node):
         ring_marker.lifetime.sec = 0
         
         # Calculate approaching point (offset using normal)
-        offset_length = 0.5  # Same as in start_navigation
+        offset_length = 0.8 # Same as in start_navigation
         offset = np.array([circle_pos[0], circle_pos[1], circle_pos[2]]) + self.normal_normalized_new * offset_length
         qx, qy, qz, qw = self.calculate_orientation_quaternion(
             float(offset[0]), float(offset[1]), 
@@ -1070,7 +1071,8 @@ class RingDetector(Node):
         approach_marker = Marker()
         approach_marker.header.frame_id = "map"
         approach_marker.header.stamp = self.get_clock().now().to_msg()
-        approach_marker.id = 2000 + circle_id  # Unique ID for approach marker
+        approach_marker.id = circle_id  # Use circle_id directly
+        approach_marker.ns = "approach_points"  # Add namespace
         approach_marker.type = Marker.ARROW
         approach_marker.action = Marker.ADD
         
@@ -1080,7 +1082,7 @@ class RingDetector(Node):
         approach_marker.scale.z = 0.2  # Arrow height
         
         # Set approach marker color (red to distinguish from ring)
-        approach_marker.color.r = 0.8
+        approach_marker.color.r = 0.0
         approach_marker.color.g = 0.0
         approach_marker.color.b = 0.0
         approach_marker.color.a = 1.0
@@ -1094,15 +1096,93 @@ class RingDetector(Node):
         approach_marker.pose.orientation.z = qz
         approach_marker.pose.orientation.w = qw
         
-        # Set marker lifetime (0 for persistent)
-        approach_marker.lifetime.sec = 0
+        # Create color text marker
+        color_marker = Marker()
+        color_marker.header.frame_id = "map"
+        color_marker.header.stamp = self.get_clock().now().to_msg()
+        color_marker.id = circle_id  # Use circle_id directly
+        color_marker.ns = "ring_colors"  # Add namespace
+        color_marker.type = Marker.TEXT_VIEW_FACING
+        color_marker.action = Marker.ADD
         
-        # Add both markers to the MarkerArray
+        # Set text marker size and color (white text)
+        color_marker.scale.z = 0.15  # Text height
+        color_marker.color.r = 0.0
+        color_marker.color.g = 0.0
+        color_marker.color.b = 0.0
+        color_marker.color.a = 1.0
+        
+        # Set text content and position
+        color_marker.text = color_name.upper()
+        color_marker.pose.position.x = circle_pos[0]
+        color_marker.pose.position.y = circle_pos[1]
+        color_marker.pose.position.z = circle_pos[2] + 0.2  # Position above the sphere
+        
+        # Create normal vector marker
+        normal_marker = Marker()
+        normal_marker.header.frame_id = "map"
+        normal_marker.header.stamp = self.get_clock().now().to_msg()
+        normal_marker.id = circle_id  # Use circle_id directly
+        normal_marker.ns = "ring_normals"  # Add namespace
+        normal_marker.type = Marker.ARROW
+        normal_marker.action = Marker.ADD
+        
+        # Set normal marker size (smaller than approach marker)
+        normal_marker.scale.x = 0.3  # Arrow length
+        normal_marker.scale.y = 0.05  # Arrow width
+        normal_marker.scale.z = 0.05  # Arrow height
+        
+        # Set normal marker color (blue)
+        normal_marker.color.r = 0.0
+        normal_marker.color.g = 0.0
+        normal_marker.color.b = 1.0
+        normal_marker.color.a = 1.0
+        
+        # Set normal marker position and orientation
+        normal_marker.pose.position.x = circle_pos[0]
+        normal_marker.pose.position.y = circle_pos[1]
+        normal_marker.pose.position.z = circle_pos[2]
+        
+        # Calculate orientation quaternion from normal vector
+        normal_vec = self.normal_normalized_new
+        if np.linalg.norm(normal_vec) > 0:
+            # Align the arrow with the normal vector
+            z_axis = np.array([0, 0, 1])  # Default arrow direction
+            normal_vec = normal_vec / np.linalg.norm(normal_vec)
+            
+            # Compute the rotation axis and angle
+            cross_product = np.cross(z_axis, normal_vec)
+            if np.linalg.norm(cross_product) < 1e-5:
+                # Vectors are parallel or anti-parallel
+                if np.dot(z_axis, normal_vec) > 0:
+                    # Parallel - no rotation needed
+                    normal_marker.pose.orientation.w = 1.0
+                else:
+                    # Anti-parallel - rotate 180 degrees around x-axis
+                    normal_marker.pose.orientation.x = 1.0
+                    normal_marker.pose.orientation.w = 0.0
+            else:
+                # General case - use quaternion rotation
+                dot_product = np.dot(z_axis, normal_vec)
+                angle = np.arccos(dot_product)
+                axis = cross_product / np.linalg.norm(cross_product)
+                
+                # Convert axis-angle to quaternion
+                quat = tf_transformations.quaternion_about_axis(angle, axis)
+                normal_marker.pose.orientation.x = float(quat[0])
+                normal_marker.pose.orientation.y = float(quat[1])
+                normal_marker.pose.orientation.z = float(quat[2])
+                normal_marker.pose.orientation.w = float(quat[3])
+        
+        # Add all markers to the MarkerArray
         marker_array.markers.append(ring_marker)
         marker_array.markers.append(approach_marker)
+        marker_array.markers.append(color_marker)
+        marker_array.markers.append(normal_marker)
         
         # Publish the MarkerArray
         self.marker_array_pub.publish(marker_array)
+        self.get_logger().info(f"Published markers for ring ID {circle_id} with color {color_name}")
     
     # # Add a text marker with the color name
     # text_marker = Marker()
