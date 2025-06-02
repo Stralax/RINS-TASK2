@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import rclpy
+import rclpy 
 from rclpy.node import Node
 import cv2
 import numpy as np
@@ -22,6 +22,9 @@ from collections import deque
 from dataclasses import dataclass
 import tf_transformations
 from nav_msgs.msg import OccupancyGrid
+
+from sklearn.decomposition import PCA
+from sklearn.cluster import DBSCAN
 
 @dataclass
 class RingData:
@@ -181,9 +184,9 @@ class RingDetector(Node):
             return None
 
     def get_point_cloud_position(self, x, y, r):
-        """Get 3D position of ring center from point cloud data"""
+        """Get 3D position of ring center and points from point cloud data using a ring mask"""
         if self.pointcloud_data is None:
-            return None
+            return None, None
             
         try:
             # Convert point cloud to numpy array
@@ -192,31 +195,52 @@ class RingDetector(Node):
                 field_names=("x", "y", "z")
             ).reshape((self.pointcloud_data.height, self.pointcloud_data.width, 3))
 
+            # Create a mask for the ring
+            mask = np.zeros((self.pointcloud_data.height, self.pointcloud_data.width), dtype=np.uint8)
             
-
-            # Sample points around the ring
+            # Draw a ring on the mask - thickness controls how many points we sample
+            # Inner radius is 0.8*r and outer radius is 1.2*r to focus on the ring itself
+            inner_r = int(r * 0.8)
+            outer_r = int(r * 1.2)
+            cv2.circle(mask, (x, y), outer_r, 255, thickness=outer_r-inner_r)
+            
+            # Debug visualization of the mask
+            mask_viz = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+            cv2.circle(mask_viz, (x, y), inner_r, (0, 0, 255), 1)  # Inner circle in red
+            cv2.circle(mask_viz, (x, y), outer_r, (0, 255, 0), 1)  # Outer circle in green
+            
+            # Save mask visualization for PCA visualization
+            self.ring_mask_viz = mask_viz.copy()
+            
+            cv2.imshow("Ring Mask", mask_viz)
+            
+            # Extract 3D points where mask is non-zero
             ring_points = []
-            num_samples = 8
-            for angle in np.linspace(0, 2*np.pi, num_samples, endpoint=False):
-                px = int(x + r * 0.8 * np.cos(angle))  # Sample at 80% of radius to get on the ring
-                py = int(y + r * 0.8 * np.sin(angle))
-                
-                # Check if point is within image bounds
-                if 0 <= px < self.pointcloud_data.width and 0 <= py < self.pointcloud_data.height:
+            mask_indices = np.where(mask > 0)
+            for py, px in zip(mask_indices[0], mask_indices[1]):
+                if 0 <= py < pc_array.shape[0] and 0 <= px < pc_array.shape[1]:
                     point = pc_array[py, px]
-                    if np.isfinite(point).all() and not np.isnan(point).any():
+                    if np.all(np.isfinite(point)):
                         ring_points.append(point)
             
+            self.get_logger().info(f"Extracted {len(ring_points)} points from point cloud within ring mask")
+            
             # If we have enough points, compute the median position
-            if len(ring_points) >= 3:
-                ring_position = np.median(np.array(ring_points), axis=0)
-                return ring_position, ring_points
+            if len(ring_points) >= 5:  # Require at least 5 points for robust estimation
+                ring_points_array = np.array(ring_points)
                 
+                # Compute ring center using median for robustness
+                ring_position = np.median(ring_points_array, axis=0)
+                
+                # self.get_logger().debug(f"Found {len(ring_points)} points on ring mask with center at {ring_position}")
+                return ring_position, ring_points
+                    
             return None, None
                 
         except Exception as e:
             self.get_logger().error(f"Error extracting point cloud data: {e}")
             return None, None
+
 
     def is_hollow_ring(self, x, y, r, depth_map):
         """Check if ring is hollow by comparing center depth with perimeter depth."""
@@ -403,36 +427,101 @@ class RingDetector(Node):
 
         return "", (128, 128, 128)
     
+   
     def calculate_ring_normal(self, points_3d):
-        """Calculate the normal vector of the ring based on 3D points"""
-        if len(points_3d) < 3:
+        """Calculate the normal vector of the ring using PCA with improved filtering"""
+        if len(points_3d) < 8:  # Increase minimum points required
+            self.get_logger().warn(f"Not enough points for PCA normal calculation: {len(points_3d)}")
             return None
         
-        # Fit a plane to the points using Singular Value Decomposition (SVD)
-        points_3d = np.array(points_3d)
-        centroid = np.mean(points_3d, axis=0)
-        centered_points = points_3d - centroid
-        
-        # Perform SVD
-        _, _, vh = np.linalg.svd(centered_points)
-        
-        # The normal is the last row of V (or V^T)
-        normal = vh[-1]
-
-        # Normalize the normal vector
-        norm = np.linalg.norm(normal)
-        if norm > 0:
-            normal = normal / norm
-        else:
-            self.get_logger().warn("Normal vector has zero length, returning None")
+        try:
+            # Convert to numpy array if not already
+            points = np.array(points_3d)
+            
+            # 1. Filter outliers using statistical methods
+            # Calculate mean and standard deviation of points along each axis
+            mean = np.mean(points, axis=0)
+            std = np.std(points, axis=0)
+            
+            # Filter points that are within 2 standard deviations from mean
+            mask = np.all(np.abs(points - mean) < 2 * std, axis=1)
+            filtered_points = points[mask]
+            
+            if len(filtered_points) < 8:
+                self.get_logger().warn(f"Too few points after filtering: {len(filtered_points)}")
+                return None
+            
+            # 2. Apply PCA to find the principal components
+            pca = PCA(n_components=3)
+            pca.fit(filtered_points)
+            
+            # The normal is the eigenvector corresponding to the smallest eigenvalue
+            normal = pca.components_[2]
+            
+            # 3. Draw PCA visualization directly on the Ring Mask image
+            if hasattr(self, "ring_mask_viz") and self.ring_mask_viz is not None:
+                # Make a copy to avoid modifying the original
+                pca_viz = self.ring_mask_viz.copy()
+                
+                # Get the center of the mask (original ring center)
+                mask_height, mask_width = pca_viz.shape[:2]
+                center_x, center_y = mask_width // 2, mask_height // 2
+                
+                # Scale factor for visualization
+                scale = min(mask_width, mask_height) // 4
+                
+                # Draw the three principal components as colored arrows
+                for i, color in enumerate([(0, 0, 255), (0, 255, 0), (255, 0, 0)]):  # Blue, Green, Red
+                    # Project component to 2D
+                    component = pca.components_[i]
+                    component_2d = component[:2]
+                    # Scale the component for visualization
+                    norm = np.linalg.norm(component_2d)
+                    if norm > 0:
+                        component_2d = component_2d / norm * scale
+                    
+                    # Draw arrow from center
+                    end_x = int(center_x + component_2d[0])
+                    end_y = int(center_y + component_2d[1])
+                    cv2.arrowedLine(pca_viz, (center_x, center_y), (end_x, end_y), color, 2, tipLength=0.2)
+                    cv2.putText(pca_viz, f"PC{i+1}", (end_x + 5, end_y + 5), 
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+                
+                # Draw the normal vector as a white arrow
+                normal_2d = normal[:2]
+                norm = np.linalg.norm(normal_2d)
+                if norm > 0:
+                    normal_2d = normal_2d / norm * scale
+                end_x = int(center_x + normal_2d[0])
+                end_y = int(center_y + normal_2d[1])
+                cv2.arrowedLine(pca_viz, (center_x, center_y), (end_x, end_y), 
+                            (255, 255, 255), 2, tipLength=0.2)
+                cv2.putText(pca_viz, "Normal", (end_x + 5, end_y + 5), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                
+                # Show eigenvalues and planarity information
+                eigenvalues = pca.explained_variance_
+                planarity = eigenvalues[1] / eigenvalues[2] if eigenvalues[2] > 0 else 0
+                
+                cv2.putText(pca_viz, f"Planarity: {planarity:.2f}", (10, 20), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                cv2.putText(pca_viz, f"Normal: [{normal[0]:.2f}, {normal[1]:.2f}, {normal[2]:.2f}]", 
+                        (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                
+                # Show the ring mask with PCA visualization
+                cv2.imshow("Ring Mask with PCA", pca_viz)
+                cv2.waitKey(1)
+            
+            # 4. Make normal point in consistent direction
+            if normal[2] < 0:
+                normal = -normal
+                
+            self.get_logger().info(f"Normal vector: {normal}, planarity: {planarity:.2f}")
+            return normal
+                
+        except Exception as e:
+            self.get_logger().error(f"Error in PCA normal calculation: {e}")
             return None
-
-        # Ensure the normal points upwards (z-component positive)
-        if normal[2] < 0:
-            normal = -normal
-        # Return the normal vector
-        self.get_logger().debug(f"Calculated normal vector: {normal}")
-        return normal
 
     def image_callback(self, msg):
         try:
@@ -548,7 +637,7 @@ class RingDetector(Node):
                 "map", 
                 "base_link",
                 rclpy.time.Time(),  # Get latest transform
-                rclpy.duration.Duration(seconds=1.0)
+                rclpy.duration.Duration(seconds=0.1)
             )
             
             # Transform the vector
@@ -560,7 +649,7 @@ class RingDetector(Node):
                 transformed_vector.vector.y, 
                 transformed_vector.vector.z
             ])
-            # result = result / np.linalg.norm(result)
+            result = result / np.linalg.norm(result)
             
             return result
             

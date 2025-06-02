@@ -1,8 +1,8 @@
-# Install script for directory: /home/dimitar/Desktop/RINS-TASK2/dis_tutorial7
+# Install script for directory: /home/beta/Desktop/RINS-TASK2/dis_tutorial7
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/dimitar/Desktop/RINS-TASK2/install/dis_tutorial7")
+  set(CMAKE_INSTALL_PREFIX "/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -37,105 +37,119 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
   set(CMAKE_CROSSCOMPILING "FALSE")
 endif()
 
-# Set default install directory permissions.
+# Set path to fallback-tool for dependency-resolution.
 if(NOT DEFINED CMAKE_OBJDUMP)
   set(CMAKE_OBJDUMP "/usr/bin/objdump")
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7/" TYPE DIRECTORY FILES
-    "/home/dimitar/Desktop/RINS-TASK2/dis_tutorial7/launch"
-    "/home/dimitar/Desktop/RINS-TASK2/dis_tutorial7/meshes"
-    "/home/dimitar/Desktop/RINS-TASK2/dis_tutorial7/urdf"
-    "/home/dimitar/Desktop/RINS-TASK2/dis_tutorial7/config"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/launch"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/meshes"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/urdf"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/config"
     )
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7/scripts" TYPE DIRECTORY FILES "/home/dimitar/Desktop/RINS-TASK2/dis_tutorial7/scripts/" FILES_MATCHING REGEX "/[^/]*\\.txt$")
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7/scripts" TYPE DIRECTORY FILES "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/" FILES_MATCHING REGEX "/[^/]*\\.txt$")
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/dis_tutorial7" TYPE PROGRAM FILES
-    "/home/dimitar/Desktop/RINS-TASK2/dis_tutorial7/scripts/detect_birds.py"
-    "/home/dimitar/Desktop/RINS-TASK2/dis_tutorial7/scripts/arm_mover_actions.py"
-    "/home/dimitar/Desktop/RINS-TASK2/dis_tutorial7/scripts/robot_commander.py"
-    "/home/dimitar/Desktop/RINS-TASK2/dis_tutorial7/scripts/follow_bridge.py"
-    "/home/dimitar/Desktop/RINS-TASK2/dis_tutorial7/scripts/bird_classifier.py"
-    "/home/dimitar/Desktop/RINS-TASK2/dis_tutorial7/scripts/detect_people1.py"
-    "/home/dimitar/Desktop/RINS-TASK2/dis_tutorial7/scripts/detect_rings_depth.py"
-    "/home/dimitar/Desktop/RINS-TASK2/dis_tutorial7/scripts/detect_rings1.py"
-    "/home/dimitar/Desktop/RINS-TASK2/dis_tutorial7/scripts/skeletonized_path_2.py"
-    "/home/dimitar/Desktop/RINS-TASK2/dis_tutorial7/scripts/detect_classify_birds.py"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/detect_birds.py"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/arm_mover_actions.py"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/robot_commander.py"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/follow_bridge.py"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/bird_classifier.py"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/detect_people1.py"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/detect_rings_depth.py"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/detect_rings1.py"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/skeletonized_path_2.py"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/detect_classify_birds.py"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/rings_kice.py"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/rings.py"
     )
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ament_index/resource_index/package_run_dependencies" TYPE FILE FILES "/home/dimitar/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_index/share/ament_index/resource_index/package_run_dependencies/dis_tutorial7")
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ament_index/resource_index/package_run_dependencies" TYPE FILE FILES "/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_index/share/ament_index/resource_index/package_run_dependencies/dis_tutorial7")
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ament_index/resource_index/parent_prefix_path" TYPE FILE FILES "/home/dimitar/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_index/share/ament_index/resource_index/parent_prefix_path/dis_tutorial7")
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ament_index/resource_index/parent_prefix_path" TYPE FILE FILES "/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_index/share/ament_index/resource_index/parent_prefix_path/dis_tutorial7")
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7/environment" TYPE FILE FILES "/opt/ros/humble/share/ament_cmake_core/cmake/environment_hooks/environment/ament_prefix_path.sh")
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7/environment" TYPE FILE FILES "/home/dimitar/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_environment_hooks/ament_prefix_path.dsv")
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7/environment" TYPE FILE FILES "/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_environment_hooks/ament_prefix_path.dsv")
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7/environment" TYPE FILE FILES "/opt/ros/humble/share/ament_cmake_core/cmake/environment_hooks/environment/path.sh")
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7/environment" TYPE FILE FILES "/home/dimitar/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_environment_hooks/path.dsv")
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7/environment" TYPE FILE FILES "/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_environment_hooks/path.dsv")
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/dimitar/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_environment_hooks/local_setup.bash")
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_environment_hooks/local_setup.bash")
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/dimitar/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_environment_hooks/local_setup.sh")
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_environment_hooks/local_setup.sh")
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/dimitar/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_environment_hooks/local_setup.zsh")
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_environment_hooks/local_setup.zsh")
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/dimitar/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_environment_hooks/local_setup.dsv")
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_environment_hooks/local_setup.dsv")
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/dimitar/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_environment_hooks/package.dsv")
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_environment_hooks/package.dsv")
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ament_index/resource_index/packages" TYPE FILE FILES "/home/dimitar/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_index/share/ament_index/resource_index/packages/dis_tutorial7")
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ament_index/resource_index/packages" TYPE FILE FILES "/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_index/share/ament_index/resource_index/packages/dis_tutorial7")
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7/cmake" TYPE FILE FILES
-    "/home/dimitar/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_core/dis_tutorial7Config.cmake"
-    "/home/dimitar/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_core/dis_tutorial7Config-version.cmake"
+    "/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_core/dis_tutorial7Config.cmake"
+    "/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7/ament_cmake_core/dis_tutorial7Config-version.cmake"
     )
 endif()
 
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/dimitar/Desktop/RINS-TASK2/dis_tutorial7/package.xml")
-endif()
-
-if(CMAKE_INSTALL_COMPONENT)
-  set(CMAKE_INSTALL_MANIFEST "install_manifest_${CMAKE_INSTALL_COMPONENT}.txt")
-else()
-  set(CMAKE_INSTALL_MANIFEST "install_manifest.txt")
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dis_tutorial7" TYPE FILE FILES "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/package.xml")
 endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/dimitar/Desktop/RINS-TASK2/build/dis_tutorial7/${CMAKE_INSTALL_MANIFEST}"
+if(CMAKE_INSTALL_LOCAL_ONLY)
+  file(WRITE "/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
+endif()
+if(CMAKE_INSTALL_COMPONENT)
+  if(CMAKE_INSTALL_COMPONENT MATCHES "^[a-zA-Z0-9_.+-]+$")
+    set(CMAKE_INSTALL_MANIFEST "install_manifest_${CMAKE_INSTALL_COMPONENT}.txt")
+  else()
+    string(MD5 CMAKE_INST_COMP_HASH "${CMAKE_INSTALL_COMPONENT}")
+    set(CMAKE_INSTALL_MANIFEST "install_manifest_${CMAKE_INST_COMP_HASH}.txt")
+    unset(CMAKE_INST_COMP_HASH)
+  endif()
+else()
+  set(CMAKE_INSTALL_MANIFEST "install_manifest.txt")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  file(WRITE "/home/beta/Desktop/RINS-TASK2/build/dis_tutorial7/${CMAKE_INSTALL_MANIFEST}"
+     "${CMAKE_INSTALL_MANIFEST_CONTENT}")
+endif()
