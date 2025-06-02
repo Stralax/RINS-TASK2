@@ -8,19 +8,45 @@ import time
 from transformers import AutoFeatureExtractor, AutoModelForImageClassification
 import argparse
 
+# Updated list with only the specific birds
 COMMON_BIRDS = [
-    "robin", "hawk", "eagle", "swallow", "sparrow", "stork", 
-    "cuckoo", "penguin", "duck", "goose", "owl", "pigeon", "crow",
-    "raven", "seagull", "hummingbird", "flamingo", "peacock", "parrot",
-    "laysan albatross", "yellow headed blackbird", "indigo bunting",
-    "pelagic cormorant", "american crow", "yellow billed cuckoo",
-    "purple finch", "vermilion flycatcher", "european goldfinch",
-    "eared grebe", "california gull", "ruby throated hummingbird",
-    "blue jay", "pied kingfisher", "baltimore oriole",
-    "white pelican", "horned puffin", "white necked raven",
-    "great grey shrike", "house sparrow", "cape glossy starling",
-    "tree swallow", "common tern", "red headed woodpecker"
+    "002.laysan_albatross", "012.yellow_headed_blackbird", "014.indigo_bunting",
+    "025.pelagic_cormorant", "029.american_crow", "033.yellow_billed_cuckoo",
+    "035.purple_finch", "042.vermilion_flycatcher", "048.european_goldfinch",
+    "050.eared_grebe", "059.california_gull", "068.ruby_throated_hummingbird",
+    "073.blue_jay", "081.pied_kingfisher", "095.baltimore_oriole",
+    "101.white_pelican", "106.horned_puffin", "108.white_necked_raven",
+    "112.great_grey_shrike", "118.house_sparrow", "134.cape_glossy_starling",
+    "138.tree_swallow", "144.common_tern", "191.red_headed_woodpecker"
 ]
+
+# Cleaned bird names for spoken dialogue
+BIRD_DISPLAY_NAMES = {
+    "002.laysan_albatross": "Laysan Albatross",
+    "012.yellow_headed_blackbird": "Yellow Headed Blackbird",
+    "014.indigo_bunting": "Indigo Bunting",
+    "025.pelagic_cormorant": "Pelagic Cormorant",
+    "029.american_crow": "American Crow",
+    "033.yellow_billed_cuckoo": "Yellow Billed Cuckoo",
+    "035.purple_finch": "Purple Finch",
+    "042.vermilion_flycatcher": "Vermilion Flycatcher",
+    "048.european_goldfinch": "European Goldfinch",
+    "050.eared_grebe": "Eared Grebe",
+    "059.california_gull": "California Gull",
+    "068.ruby_throated_hummingbird": "Ruby Throated Hummingbird",
+    "073.blue_jay": "Blue Jay",
+    "081.pied_kingfisher": "Pied Kingfisher",
+    "095.baltimore_oriole": "Baltimore Oriole",
+    "101.white_pelican": "White Pelican",
+    "106.horned_puffin": "Horned Puffin",
+    "108.white_necked_raven": "White Necked Raven",
+    "112.great_grey_shrike": "Great Grey Shrike",
+    "118.house_sparrow": "House Sparrow",
+    "134.cape_glossy_starling": "Cape Glossy Starling",
+    "138.tree_swallow": "Tree Swallow",
+    "144.common_tern": "Common Tern",
+    "191.red_headed_woodpecker": "Red Headed Woodpecker"
+}
 
 class DialogueSystem:
     def __init__(self, test_mode=False):
@@ -52,16 +78,10 @@ class DialogueSystem:
         self.labels = self.model.config.id2label if hasattr(self.model.config, "id2label") else {0: "Male", 1: "Female"}
         print("Model loaded successfully")
 
-        # Bird locations (for the final response)
-        self.bird_locations = {
-            "robin": "center of the park sitting on a green ring",
-            "hawk": "central part of the park sitting on a yellow ring",
-            "swallow": "west part of the park sitting on a red ring",
-            "eagle": "south part of the park sitting on a white ring",
-            "sparrow": "north part of the park sitting on a brown ring",
-            "stork": "southwest part of the park sitting on a black ring",
-            "cuckoo": "east part of the park sitting on a blue ring"
-        }
+        # Import rclpy here to access the latest detected_rings information
+        # Note: We'll actually get this from RobotCommander
+        self.detected_rings = {}
+        self.detected_birds = {}
         
         # Initialize pygame for audio playback
         try:
@@ -70,6 +90,28 @@ class DialogueSystem:
         except Exception as e:
             print(f"Error initializing audio playback: {e}")
             self.test_mode = True
+        
+    def set_detected_birds_and_rings(self, detected_birds, detected_rings):
+        """Set the detected birds and rings from RobotCommander"""
+        self.detected_birds = detected_birds
+        self.detected_rings = detected_rings
+        
+    def get_bird_location_description(self, bird_id):
+        """Generate a location description based on the associated ring"""
+        if not self.detected_birds or not self.detected_rings or bird_id not in self.detected_birds:
+            return "somewhere in the area"
+        
+        bird_data = self.detected_birds[bird_id]
+        ring_id = bird_data.get('associated_ring')
+        
+        if not ring_id or ring_id not in self.detected_rings:
+            return "somewhere in the area"
+        
+        ring_data = self.detected_rings[ring_id]
+        ring_color = ring_data.get('color', 'unknown')
+        ring_geo = ring_data.get('geo', 'unknown')
+        
+        return f"in the {ring_geo} part of the area near a {ring_color} ring"
         
     def detect_gender(self, image_path):
         try:
@@ -113,15 +155,7 @@ class DialogueSystem:
             print(f"Error in speech synthesis: {e}")
             
     def listen(self, timeout=10, phrase_time_limit=40):
-        """Listen for user speech and convert to text.
-        
-        Args:
-            timeout (int): Maximum number of seconds to wait for speech to start
-            phrase_time_limit (int): Maximum number of seconds to allow a phrase to continue
-        
-        Returns:
-            str or None: Recognized text (lowercase) or None if recognition failed
-        """
+        """Listen for user speech and convert to text."""
         if self.test_mode:
             # In test mode, simulate responses
             response = input("Person (type response): ")
@@ -157,10 +191,37 @@ class DialogueSystem:
     
         response = response.lower()
         
-        # Check if any bird name is in the response
+        # First try exact matches with bird IDs
         for bird in COMMON_BIRDS:
-            if bird in response:
+            bird_clean = bird.lower()
+            if bird_clean in response:
                 return bird
+        
+        # If no exact match, try with display names
+        for bird_id, display_name in BIRD_DISPLAY_NAMES.items():
+            if display_name.lower() in response:
+                return bird_id
+                
+        # Try with partial matches (just the actual bird name)
+        for bird in COMMON_BIRDS:
+            bird_parts = bird.split('.')[-1].lower().replace('_', ' ')
+            if bird_parts in response:
+                return bird
+                
+        return None
+
+    def find_bird_by_name(self, bird_name):
+        """Find a bird ID based on name from detected birds"""
+        if not self.detected_birds:
+            return None
+            
+        # Clean input name
+        bird_name = bird_name.lower().replace('_', ' ')
+        
+        for bird_id, bird_data in self.detected_birds.items():
+            detected_name = bird_data.get('name', '').lower()
+            if bird_name in detected_name or detected_name in bird_name:
+                return bird_id
                 
         return None
             
@@ -182,17 +243,34 @@ class DialogueSystem:
                 
             # If we get here, we have a valid bird name
             break
+        
+        # Try to find this bird in our detected birds    
+        bird_id = self.find_bird_by_name(bird_name)
+        
+        if bird_id and bird_id in self.detected_birds:
+            # We have this bird in our detected birds
+            bird_display_name = BIRD_DISPLAY_NAMES.get(bird_name, bird_name)
+            location = self.get_bird_location_description(bird_id)
+            self.speak(f"Well, there is one {bird_display_name} {location}.")
+        else:
+            # We don't have this bird in detected birds
+            bird_display_name = BIRD_DISPLAY_NAMES.get(bird_name, bird_name)
+            self.speak(f"Well, I haven't seen any {bird_display_name} around here yet.")
             
-        location = self.bird_locations.get(bird_name, "park")
-        self.speak(f"Well, there is one {bird_name} in the {location}.")
         return bird_name
 
             
     def talk_to_male(self):
         """Dialogue with a male person with error handling for invalid and negative responses."""
         def confirm_and_respond(bird):
-            location = self.bird_locations.get(bird, "somewhere in the park")
-            self.speak(f"OK. The {bird} then. There is one in the {location}.")
+            bird_id = self.find_bird_by_name(bird)
+            bird_display_name = BIRD_DISPLAY_NAMES.get(bird, bird)
+            
+            if bird_id and bird_id in self.detected_birds:
+                location = self.get_bird_location_description(bird_id)
+                self.speak(f"OK. The {bird_display_name} then. There is one {location}.")
+            else:
+                self.speak(f"OK. The {bird_display_name} then. I haven't seen any around here yet.")
 
         bird_counts = {}  # Track bird occurrences
         self.speak("Hey broski, which is your favourite bird?")
@@ -201,13 +279,13 @@ class DialogueSystem:
         while True:
             response = self.listen()
             if not response:
-                prompt = f"I couldn't get that, could you repeat your favorite bird?" if not last_bird else f"I couldn't get that, are you sure your favorite bird is {last_bird}?"
+                prompt = f"I couldn't get that, could you repeat your favorite bird?" if not last_bird else f"I couldn't get that, are you sure your favorite bird is {BIRD_DISPLAY_NAMES.get(last_bird, last_bird)}?"
                 self.speak(prompt)
                 continue
 
             current_bird = self.extract_bird_name(response)
             if not current_bird:
-                prompt = f"I couldn't get that, could you repeat your favorite bird?" if not last_bird else f"I couldn't get that, are you sure your favorite bird is {last_bird}?"
+                prompt = f"I couldn't get that, could you repeat your favorite bird?" if not last_bird else f"I couldn't get that, are you sure your favorite bird is {BIRD_DISPLAY_NAMES.get(last_bird, last_bird)}?"
                 self.speak(prompt)
                 continue
 
@@ -223,7 +301,7 @@ class DialogueSystem:
             self.speak("Are you sure?")
             confirmation = self.listen()
             if not confirmation:
-                self.speak(f"I couldn't get that, are you sure your favorite bird is {current_bird}?")
+                self.speak(f"I couldn't get that, are you sure your favorite bird is {BIRD_DISPLAY_NAMES.get(current_bird, current_bird)}?")
                 continue
 
             # Check for negative responses
@@ -237,7 +315,7 @@ class DialogueSystem:
 
             new_bird = self.extract_bird_name(confirmation)
             if not new_bird:
-                self.speak(f"I couldn't get that, are you sure your favorite bird is {current_bird}?")
+                self.speak(f"I couldn't get that, are you sure your favorite bird is {BIRD_DISPLAY_NAMES.get(current_bird, current_bird)}?")
                 continue
 
             # Update bird counts for new bird
@@ -249,7 +327,7 @@ class DialogueSystem:
                 confirm_and_respond(new_bird)
                 return new_bird
 
-            self.speak(f"OK, the {new_bird} then. Are you sure?")
+            self.speak(f"OK, the {BIRD_DISPLAY_NAMES.get(new_bird, new_bird)} then. Are you sure?")
             
     def run_dialogue(self, image_path):
         """Run the full dialogue system with gender recognition."""

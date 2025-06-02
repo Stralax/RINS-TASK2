@@ -1472,7 +1472,9 @@ def main(args=None):
         greeting_text = f"Hello {face_gender}! Nice to meet you, person number {face_id}!"
 
         
-        # Call respective functions from nlp_test based on gender
+        rc.nlp_system.set_detected_birds_and_rings(rc.detected_birds, rc.detected_rings)
+
+        # Now call the appropriate dialogue function
         if face_gender.lower() == "male":
             rc.nlp_system.talk_to_male()
         else:
