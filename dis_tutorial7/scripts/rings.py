@@ -1021,44 +1021,88 @@ class RingDetector(Node):
                     # del self.circle_positions[circle_id]
         
     def create_confirmed_circle_marker(self, circle_id, circle_pos, color_name="unknown", color_bgr=(0,0,0)):
-        """Create a persistent marker for a confirmed circle"""
-        marker = Marker()
-        marker.header.frame_id = "map"
-        marker.header.stamp = self.get_clock().now().to_msg()
-        marker.id = 1000 + circle_id  # Use a different ID range to avoid conflicts
-        marker.type = Marker.SPHERE
-        marker.action = Marker.ADD
+        """Create a MarkerArray for a confirmed circle and its approaching point"""
+        marker_array = MarkerArray()
+
+        # Marker for the ring position (sphere)
+        ring_marker = Marker()
+        ring_marker.header.frame_id = "map"
+        ring_marker.header.stamp = self.get_clock().now().to_msg()
+        ring_marker.id = 1000 + circle_id  # Unique ID for ring marker
+        ring_marker.type = Marker.SPHERE
+        ring_marker.action = Marker.ADD
         
-        # Set marker size
-        marker.scale.x = 0.3  # Diameter
-        marker.scale.y = 0.3  # Diameter
-        marker.scale.z = 0.3  # Height
+        # Set ring marker size
+        ring_marker.scale.x = 0.3  # Diameter
+        ring_marker.scale.y = 0.3  # Diameter
+        ring_marker.scale.z = 0.3  # Height
         
         # Set marker color based on detected color (with fallback to yellow)
         if color_name in ["red", "green", "blue", "black"]:
-            # Use the detected color (BGR format)
             b, g, r = color_bgr
-            marker.color.r = float(r)/255.0
-            marker.color.g = float(g)/255.0
-            marker.color.b = float(b)/255.0
+            ring_marker.color.r = float(r)/255.0
+            ring_marker.color.g = float(g)/255.0
+            ring_marker.color.b = float(b)/255.0
         else:
-            # Default to yellow for unknown colors
-            marker.color.r = 1.0
-            marker.color.g = 1.0
-            marker.color.b = 0.0
+            ring_marker.color.r = 1.0
+            ring_marker.color.g = 1.0
+            ring_marker.color.b = 0.0
         
-        marker.color.a = 1.0  # Ensure full opacity
+        ring_marker.color.a = 1.0  # Full opacity
         
-        # Set marker position
-        marker.pose.position.x = circle_pos[0]
-        marker.pose.position.y = circle_pos[1]
-        marker.pose.position.z = circle_pos[2]  # Half height
+        # Set ring marker position
+        ring_marker.pose.position.x = circle_pos[0]
+        ring_marker.pose.position.y = circle_pos[1]
+        ring_marker.pose.position.z = circle_pos[2]
         
         # Set marker lifetime (0 for persistent)
-        marker.lifetime.sec = 0
+        ring_marker.lifetime.sec = 0
         
-        # Publish the marker
-        self.marker_pub.publish(marker)
+        # Calculate approaching point (offset using normal)
+        offset_length = 0.5  # Same as in start_navigation
+        offset = np.array([circle_pos[0], circle_pos[1], circle_pos[2]]) + self.normal_normalized_new * offset_length
+        qx, qy, qz, qw = self.calculate_orientation_quaternion(
+            float(offset[0]), float(offset[1]), 
+            float(circle_pos[0]), float(circle_pos[1])
+        )
+        
+        # Marker for the approaching point (arrow)
+        approach_marker = Marker()
+        approach_marker.header.frame_id = "map"
+        approach_marker.header.stamp = self.get_clock().now().to_msg()
+        approach_marker.id = 2000 + circle_id  # Unique ID for approach marker
+        approach_marker.type = Marker.ARROW
+        approach_marker.action = Marker.ADD
+        
+        # Set approach marker size
+        approach_marker.scale.x = 0.5  # Arrow length
+        approach_marker.scale.y = 0.1  # Arrow width
+        approach_marker.scale.z = 0.2  # Arrow height
+        
+        # Set approach marker color (red to distinguish from ring)
+        approach_marker.color.r = 0.8
+        approach_marker.color.g = 0.0
+        approach_marker.color.b = 0.0
+        approach_marker.color.a = 1.0
+        
+        # Set approach marker position and orientation
+        approach_marker.pose.position.x = float(offset[0])
+        approach_marker.pose.position.y = float(offset[1])
+        approach_marker.pose.position.z = float(offset[2])
+        approach_marker.pose.orientation.x = qx
+        approach_marker.pose.orientation.y = qy
+        approach_marker.pose.orientation.z = qz
+        approach_marker.pose.orientation.w = qw
+        
+        # Set marker lifetime (0 for persistent)
+        approach_marker.lifetime.sec = 0
+        
+        # Add both markers to the MarkerArray
+        marker_array.markers.append(ring_marker)
+        marker_array.markers.append(approach_marker)
+        
+        # Publish the MarkerArray
+        self.marker_array_pub.publish(marker_array)
     
     # # Add a text marker with the color name
     # text_marker = Marker()
