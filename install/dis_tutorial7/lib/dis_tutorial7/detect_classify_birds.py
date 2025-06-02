@@ -358,7 +358,7 @@ class DetectClassifyBirds(Node):
                     
                     # Draw rectangle and confidence on visualization image
                     # Use color based on confidence (red if < 0.9, green if >= 0.9)
-                    color = (0, 255, 0) if conf >= 0.91 else (0, 165, 255)
+                    color = (0, 255, 0) if conf >= 0.85 else (0, 165, 255)
                     
                     cv2.rectangle(viz_image, (x1, y1), (x2, y2), color, 2)
                     cv2.putText(
@@ -442,7 +442,7 @@ class DetectClassifyBirds(Node):
                             break
                         except CvBridgeError as e:
                             self.get_logger().error(f"Error converting bird crop to ROS message: {e}")
-                    elif conf >= 0.91:
+                    elif conf >= 0.85:
                         # If confidence is high but we're still in cooldown period
                         self.get_logger().debug(f"High-confidence bird detected ({conf:.2f}), but still in cooldown period")
             
@@ -705,9 +705,9 @@ class DetectClassifyBirds(Node):
             text_marker.pose.position.z = map_position[2] + 0.15
             text_marker.pose.orientation.w = 1.0
             text_marker.scale.z = 0.1
-            text_marker.color.r = 1.0
-            text_marker.color.g = 1.0
-            text_marker.color.b = 1.0
+            text_marker.color.r = 0.0
+            text_marker.color.g = 0.0
+            text_marker.color.b = 0.0
             text_marker.color.a = 0.8
             
             # CHANGED: Only show bird class name, not ID

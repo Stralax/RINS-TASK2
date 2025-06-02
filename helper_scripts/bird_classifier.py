@@ -111,6 +111,8 @@ class BirdClassifierNode(Node):
                 
                 # Get top prediction
                 top_prob, top_class = torch.max(probabilities, 0)
+                top3_probs, top3_classes = torch.topk(probabilities, 3)
+                self.get_logger().info(f'Top 3 predictions: {top3_classes.cpu().numpy()} with probabilities {top3_probs.cpu().numpy()}')
                 predicted_class = self.class_names[top_class.item()]
                 confidence = top_prob.item()
                 

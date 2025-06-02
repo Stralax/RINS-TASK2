@@ -68,6 +68,12 @@ class RingDetector(Node):
         self.marker_timer = self.create_timer(0.5, self.publish_ring_markers)
         # self.cleanup_timer = self.create_timer(5.0, self.cleanup_old_rings)
         
+        # Add robot position tracking
+        self.robot_position = np.array([0.0, 0.0, 0.0])  # Default position
+
+        # Add TF listener for robot position
+        self.tf_timer = self.create_timer(0.5, self.update_robot_position)
+
         # Path to the TTS script (assuming it's in the same directory as this script)
         script_dir = os.path.dirname(os.path.abspath(__file__))
         self.tts_script_path = os.path.join(script_dir, "speak.py")
@@ -122,6 +128,27 @@ class RingDetector(Node):
         """Store the latest point cloud data"""
         self.pointcloud_data = data
 
+    def update_robot_position(self):
+        """Update the robot's position in the map frame"""
+        try:
+            # Get transform from base_link to map
+            transform = self.tf_buffer.lookup_transform(
+                "map",
+                "base_link",
+                rclpy.time.Time(),
+                rclpy.duration.Duration(seconds=0.1)
+            )
+            
+            # Extract translation
+            self.robot_position = np.array([
+                transform.transform.translation.x,
+                transform.transform.translation.y,
+                transform.transform.translation.z
+            ])
+        except TransformException:
+            # Ignore transform errors
+            pass
+
     def calculate_ring_normal(self, ring_points):
         """Calculate the normal vector of a ring using PCA on the 3D points."""
         if len(ring_points) < 3:
@@ -136,17 +163,29 @@ class RingDetector(Node):
             pca.fit(points_array)
             
             # The normal is the eigenvector corresponding to the smallest eigenvalue (3rd component)
-            normal = pca.components_[1]
+            normal = pca.components_[2]
+            normal = np.cross(pca.components_[0], pca.components_[1])  # Ensure normal is perpendicular to the plane 
             
-            # Normalize the vector
+            # Calculate the ring center (mean of points)
+            center = np.mean(points_array, axis=0)
+            
+            # We need the normal to point outward from the center of the robot
+            # If we have the robot position, use that to orient the normal
+            # if hasattr(self, 'robot_position'):
+            #     # Vector from robot to ring center
+            #     robot_to_ring = center - self.robot_position
+            #     # If normal is pointing away from robot, flip it
+            #     if np.dot(normal, robot_to_ring) < 0:
+            #         normal = -normal
+            
+            # Normalize the normal vector
             normal = normal / np.linalg.norm(normal)
             
-            # The second normal is just the negative of the first
+            # The second normal is the negative of the first
             normal2 = -normal
             
             self.get_logger().debug(f"Ring normal calculated: {normal}")
             return normal, normal2
-            
         except Exception as e:
             self.get_logger().error(f"Error calculating ring normal: {e}")
             return None, None
@@ -211,24 +250,33 @@ class RingDetector(Node):
                 field_names=("x", "y", "z")
             ).reshape((self.pointcloud_data.height, self.pointcloud_data.width, 3))
             
-            # Sample points around the ring
+            # Sample points around the ring at two different radii
             ring_points = []
-            num_samples = 8
-            for angle in np.linspace(0, 2*np.pi, num_samples, endpoint=False):
-                px = int(x + r * 0.8 * np.cos(angle))  # Sample at 80% of radius to get on the ring
-                py = int(y + r * 0.8 * np.sin(angle))
-                
-                # Check if point is within image bounds
-                if 0 <= px < self.pointcloud_data.width and 0 <= py < self.pointcloud_data.height:
-                    point = pc_array[py, px]
-                    if np.isfinite(point).all() and not np.isnan(point).any():
-                        ring_points.append(point)
+            num_samples = 16  # Increased for better coverage
+            
+            # Sample at both 80% (inner edge) and 120% (outer edge) of the radius
+            sampling_radii = [0.8, 1.0, 1.2]
+            
+            for radius_factor in sampling_radii:
+                for angle in np.linspace(0, 2*np.pi, num_samples, endpoint=False):
+                    px = int(x + r * radius_factor * np.cos(angle))
+                    py = int(y + r * radius_factor * np.sin(angle))
+                    
+                    # Check if point is within image bounds
+                    if 0 <= px < self.pointcloud_data.width and 0 <= py < self.pointcloud_data.height:
+                        point = pc_array[py, px]
+                        if np.isfinite(point).all() and not np.isnan(point).any():
+                            ring_points.append(point)
             
             # If we have enough points, compute the median position
-            if len(ring_points) >= 3:
+            if len(ring_points) >= 9:  # Increased minimum number of points
                 ring_position = np.median(np.array(ring_points), axis=0)
                 return ring_position, ring_points
                 
+            return None, None
+                
+        except Exception as e:
+            self.get_logger().error(f"Error extracting point cloud data: {e}")
             return None, None
                 
         except Exception as e:
@@ -383,10 +431,10 @@ class RingDetector(Node):
             if r > max(g, b) + 5:  # R channel is stronger
                 return "red", (0, 0, 255)
                 
-        # YELLOW detection (improved)
-        if (15 <= h <= 35) and b_val > 128 and a > 128:
-            if r > b + 10 and g > b + 10:  # Both R and G channels are stronger than B
-                return "yellow", (0, 255, 255)
+        # # YELLOW detection (improved)
+        # if (15 <= h <= 35) and b_val > 128 and a > 128:
+        #     if r > b + 10 and g > b + 10:  # Both R and G channels are stronger than B
+        #         return "yellow", (0, 255, 255)
         
         # Fallback to RGB ratio analysis with more robust thresholds
         max_channel = max(r, g, b)
@@ -406,8 +454,8 @@ class RingDetector(Node):
             elif g_ratio > 0.4 and g > r + 10 and g > b + 10:
                 return "green", (0, 255, 0)
             elif r_ratio > 0.4 and r > b + 10:
-                if r_ratio > 0.5 and g_ratio > 0.5 and g > b + 10:
-                    return "yellow", (0, 255, 255)
+                # if r_ratio > 0.5 and g_ratio > 0.5 and g > b + 10:
+                #     return "yellow", (0, 255, 255)
                 return "red", (0, 0, 255)
         
         # Final check for dark colors before returning unknown
@@ -530,6 +578,11 @@ class RingDetector(Node):
 
     def update_ring(self, position, radius_px, color_name, color_bgr, normal1=None, normal2=None):
         """Update ring data in storage, create new entry if needed"""
+        # Filter out rings where y-coordinate is greater than -1.00 in map frame
+        if position[1] < -1.00 or position[0] < -4.50:
+            self.get_logger().info(f"Rejecting {color_name} ring at {position}")
+            return
+        
         # Check if this ring is already in our dictionary by checking if it's near an existing ring
         matched_hash = None
         for ring_hash, ring_data in self.rings.items():
@@ -579,6 +632,8 @@ class RingDetector(Node):
             # Announce new ring
             self.announce_ring_color(color_name)
             self.rings[pos_hash].announced = True
+            
+            self.get_logger().info(f"Added new {color_name} ring at {position} with Y={position[1]}")
 
     def cleanup_old_rings(self):
         """Remove rings that haven't been seen recently"""
@@ -699,11 +754,13 @@ class RingDetector(Node):
                     normal_marker.pose.position.z = ring_data.position[2]
                     
                     # Set orientation based on normal direction
+                    normal = normal / np.linalg.norm(normal)  # Normalize the normal vector
+                    # normal = -normal
                     normal_marker.pose.orientation = create_quat_from_normal(normal)
                     
                     # Set arrow dimensions
-                    arrow_length = 0.1  # 10cm
-                    arrow_width = 0.01  # 1cm
+                    arrow_length = 0.5# 10cm
+                    arrow_width = 0.05  # 1cm
                     normal_marker.scale.x = arrow_length  # length
                     normal_marker.scale.y = arrow_width   # width
                     normal_marker.scale.z = arrow_width   # height
