@@ -892,7 +892,7 @@ class RingDetector(Node):
         if center_x is None or center_y is None or center_z is None or center_z > 0.75:
             return
                                 
-        offset_length = 0.8 # Length of the offset vector
+        offset_length = 1.0 # Length of the offset vector
         offsetLevo = np.array([center_x, center_y, center_z]) + self.normal_normalized_new * offset_length
         qx, qy, qz, qw = self.calculate_orientation_quaternion(float(offsetLevo[0]), float(offsetLevo[1]), 
                                                                 float(center_x), float(center_y))
@@ -1060,7 +1060,7 @@ class RingDetector(Node):
         ring_marker.lifetime.sec = 0
         
         # Calculate approaching point (offset using normal)
-        offset_length = 0.8 # Same as in start_navigation
+        offset_length = 1.0 # Same as in start_navigation
         offset = np.array([circle_pos[0], circle_pos[1], circle_pos[2]]) + self.normal_normalized_new * offset_length
         qx, qy, qz, qw = self.calculate_orientation_quaternion(
             float(offset[0]), float(offset[1]), 

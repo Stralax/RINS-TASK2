@@ -54,7 +54,7 @@
 			{
 				"command" : 5,
 				"file" : 0,
-				"line" : 59,
+				"line" : 60,
 				"parent" : 0
 			},
 			{
@@ -267,17 +267,14 @@
 			"destination" : "lib/dis_tutorial7",
 			"paths" : 
 			[
-				"scripts/detect_birds.py",
 				"scripts/arm_mover_actions.py",
 				"scripts/robot_commander.py",
 				"scripts/follow_bridge.py",
 				"scripts/bird_classifier.py",
 				"scripts/detect_people1.py",
-				"scripts/detect_rings_depth.py",
-				"scripts/detect_rings1.py",
 				"scripts/skeletonized_path_2.py",
 				"scripts/detect_classify_birds.py",
-				"scripts/rings_kice.py",
+				"scripts/nlp_test.py",
 				"scripts/rings.py"
 			],
 			"type" : "file"

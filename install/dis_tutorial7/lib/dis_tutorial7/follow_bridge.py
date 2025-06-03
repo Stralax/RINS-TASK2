@@ -26,41 +26,97 @@ class BridgeSegmenter:
         self.bridge_lower = np.array([15, 50, 50])  # Adjust for your bridge
         self.bridge_upper = np.array([35, 255, 255])
         
-        # Grass exclusion range (HSV)
-        self.grass_lower = np.array([35, 50, 50])   # Green color range
-        self.grass_upper = np.array([85, 255, 255])
+        # Enhanced grass detection parameters
+        # Primary grass color range (HSV)
+        self.grass_lower = np.array([30, 40, 40])   # Wider green color range for better detection
+        self.grass_upper = np.array([90, 255, 255])  # Increased upper bound to catch more variations
+        
+        # Secondary grass color range (yellowish-green variants)
+        self.grass_lower2 = np.array([25, 30, 40])
+        self.grass_upper2 = np.array([40, 255, 255])
+        
+        # Texture parameters for grass detection
+        self.texture_kernel_size = 5
+        self.texture_threshold = 20  # Threshold for texture variation
         
         # Morphological parameters
         self.kernel_open = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))
         self.kernel_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15,15))
+        self.grass_kernel_open = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
+        self.grass_kernel_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11,11))
         
         # ROI parameters
         self.roi_bottom = 0.7  # Focus on bottom 70% of image
 
+    def detect_texture(self, gray_img):
+        """Detect texture variation in the image using Laplacian"""
+        # Apply Gaussian blur to reduce noise
+        blurred = cv2.GaussianBlur(gray_img, (5, 5), 0)
+        
+        # Apply Laplacian filter to detect edges/texture
+        laplacian = cv2.Laplacian(blurred, cv2.CV_8U, ksize=self.texture_kernel_size)
+        
+        # Threshold the Laplacian to get high texture areas
+        _, texture_mask = cv2.threshold(laplacian, self.texture_threshold, 255, cv2.THRESH_BINARY)
+        
+        # Clean up the texture mask with morphology
+        texture_mask = cv2.morphologyEx(texture_mask, cv2.MORPH_OPEN, self.grass_kernel_open)
+        texture_mask = cv2.morphologyEx(texture_mask, cv2.MORPH_CLOSE, self.grass_kernel_close)
+        
+        return texture_mask
+
     def segment(self, image):
-        """Bridge detection with grass exclusion"""
+        """Enhanced bridge detection with improved grass exclusion for textured areas"""
         try:
+            # Convert to different color spaces for analysis
             hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             
             # 1. Detect bridge color
             bridge_mask = cv2.inRange(hsv, self.bridge_lower, self.bridge_upper)
             
-            # 2. Detect and exclude grass
-            grass_mask = cv2.inRange(hsv, self.grass_lower, self.grass_upper)
+            # 2. Enhanced grass detection using color and texture
+            # 2.1. Primary color detection for grass
+            grass_mask1 = cv2.inRange(hsv, self.grass_lower, self.grass_upper)
+            
+            # 2.2. Secondary color detection for grass (yellowish variants)
+            grass_mask2 = cv2.inRange(hsv, self.grass_lower2, self.grass_upper2)
+            
+            # 2.3. Combine both color masks
+            grass_color_mask = cv2.bitwise_or(grass_mask1, grass_mask2)
+            
+            # 2.4. Detect texture-rich areas that could be grass
+            texture_mask = self.detect_texture(gray)
+            
+            # 2.5. Combine color and texture info to get final grass mask
+            # Consider an area as grass if it has both green color AND texture
+            # OR if it has very strong green signal
+            strong_green = cv2.inRange(hsv, np.array([40, 100, 100]), np.array([70, 255, 255]))
+            texture_and_color = cv2.bitwise_and(texture_mask, grass_color_mask)
+            grass_mask = cv2.bitwise_or(texture_and_color, strong_green)
+            
+            # 2.6. Apply morphological operations to clean up the grass mask
+            grass_mask = cv2.morphologyEx(grass_mask, cv2.MORPH_OPEN, self.grass_kernel_open)
+            grass_mask = cv2.morphologyEx(grass_mask, cv2.MORPH_CLOSE, self.grass_kernel_close)
+            
+            # 3. Create inverse grass mask (non-grass areas)
             no_grass = cv2.bitwise_not(grass_mask)
             
-            # 3. Combine bridge detection with grass exclusion
+            # 4. Combine bridge detection with grass exclusion
             combined = cv2.bitwise_and(bridge_mask, no_grass)
             
-            # 4. Apply ROI
+            # 5. Apply ROI
             h, w = combined.shape
             roi = np.zeros_like(combined)
             roi[int(h*(1-self.roi_bottom)):h, :] = 255
             masked = cv2.bitwise_and(combined, roi)
             
-            # 5. Morphological processing
+            # 6. Morphological processing for final bridge mask
             cleaned = cv2.morphologyEx(masked, cv2.MORPH_OPEN, self.kernel_open)
             cleaned = cv2.morphologyEx(cleaned, cv2.MORPH_CLOSE, self.kernel_close)
+            
+            # Store the last grass mask for visualization
+            self.last_grass_mask = grass_mask
             
             return cleaned
             
@@ -135,7 +191,7 @@ class BridgeFollower(Node):
         self.task_complete = False
 
         # Image saving setup
-        self.image_save_folder = os.path.expanduser("~/RINS-TASK2/img")
+        self.image_save_folder = os.path.expanduser("/home/beta/Desktop/RINS-TASK2/img/")
         os.makedirs(self.image_save_folder, exist_ok=True)
         self.should_save_image = False
         self.images_saved = False  # Flag to track if we've already saved images
@@ -224,30 +280,97 @@ class BridgeFollower(Node):
             return False
 
     def detect_red_spot(self, image):
-        """Detect the largest red area and its center in the image."""
+        """Detect the red cross in the image with improved precision."""
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        
+        # Create masks for red (combining two ranges)
         mask1 = cv2.inRange(hsv, self.lower_red1, self.upper_red1)
         mask2 = cv2.inRange(hsv, self.lower_red2, self.upper_red2)
         red_mask = cv2.bitwise_or(mask1, mask2)
 
-        # Morphological clean-up (optional)
-        red_mask = cv2.morphologyEx(red_mask, cv2.MORPH_OPEN, np.ones((5,5),np.uint8))
-        red_mask = cv2.morphologyEx(red_mask, cv2.MORPH_CLOSE, np.ones((9,9),np.uint8))
+        # Morphological clean-up for better shape detection
+        kernel_open = np.ones((3,3), np.uint8)
+        kernel_close = np.ones((9,9), np.uint8)
+        red_mask = cv2.morphologyEx(red_mask, cv2.MORPH_OPEN, kernel_open)
+        red_mask = cv2.morphologyEx(red_mask, cv2.MORPH_CLOSE, kernel_close)
 
+        # Find contours
         contours, _ = cv2.findContours(red_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        # Create debug visualization image
+        debug_img = cv2.cvtColor(red_mask, cv2.COLOR_GRAY2BGR)
+        cv2.putText(debug_img, "Red Cross Detection", (10, 30), 
+                  cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+        
         if not contours:
+            cv2.imshow("Red Cross Detection", debug_img)
+            cv2.waitKey(1)
             return False, None, 0
 
+        # Find the largest red object
         largest = max(contours, key=cv2.contourArea)
         area = cv2.contourArea(largest)
-        if area < 150:  # Ignore tiny red spots
+        
+        # Filter by minimum area
+        if area < 150:
+            cv2.imshow("Red Cross Detection", debug_img)
+            cv2.waitKey(1)
             return False, None, 0
-
+            
+        # Get the center using moments (most reliable for finding true center)
         M = cv2.moments(largest)
         if M["m00"] == 0:
+            cv2.imshow("Red Cross Detection", debug_img)
+            cv2.waitKey(1)
             return False, None, 0
+            
         cx = int(M["m10"] / M["m00"])
         cy = int(M["m01"] / M["m00"])
+
+        # Draw contour and center on debug image
+        cv2.drawContours(debug_img, [largest], -1, (0, 255, 0), 2)
+        
+        # Draw the center point
+        cv2.circle(debug_img, (cx, cy), 10, (0, 0, 255), -1)
+        
+        # Draw crosshairs on center point
+        cv2.line(debug_img, (cx - 20, cy), (cx + 20, cy), (255, 255, 0), 2)
+        cv2.line(debug_img, (cx, cy - 20), (cx, cy + 20), (255, 255, 0), 2)
+        
+        # Show target position (image center)
+        h, w = debug_img.shape[:2]
+        center_x = w // 2
+        center_y = h // 2
+        cv2.circle(debug_img, (center_x, center_y), 10, (255, 0, 255), 2)
+        
+        # Draw line from image center to red cross center
+        cv2.line(debug_img, (center_x, center_y), (cx, cy), (0, 255, 255), 2)
+        
+        # Display error values
+        error_x = cx - center_x
+        error_y = cy - center_y
+        cv2.putText(debug_img, f"Error X: {error_x}px", (10, 60), 
+                  cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+        cv2.putText(debug_img, f"Error Y: {error_y}px", (10, 90), 
+                  cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+        
+        # Check if it's likely a cross shape (optional shape validation)
+        x, y, w, h = cv2.boundingRect(largest)
+        aspect_ratio = float(w) / float(h) if h > 0 else 0
+        cv2.rectangle(debug_img, (x, y), (x+w, y+h), (255, 0, 0), 2)
+        
+        if 0.7 <= aspect_ratio <= 1.3:  # Cross should be roughly square in bounding box
+            # Likely a cross - this is what we're looking for
+            cv2.putText(debug_img, "CROSS SHAPE DETECTED", (10, 120), 
+                      cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+            self.get_logger().info(f"Found red cross at ({cx},{cy}), area={area}")
+        else:
+            cv2.putText(debug_img, f"Aspect ratio: {aspect_ratio:.2f}", (10, 120), 
+                      cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 165, 255), 2)
+        
+        # Display the debug window
+        cv2.imshow("Red Cross Detection", debug_img)
+        cv2.waitKey(1)
         return True, (cx, cy), area
 
 
@@ -261,45 +384,92 @@ class BridgeFollower(Node):
             self.image_width = cv_image.shape[1]
             image_height = cv_image.shape[0]
 
-            # --- RED SPOT LOGIC ---
+            # --- RED CROSS DETECTION AND PARKING LOGIC ---
             found_red, red_center, red_area = self.detect_red_spot(cv_image)
+            # --- ADD LOGS TO DEBUG found_red ---
+            self.get_logger().info("Starting red cross detection...")
+            self.get_logger().info(f"Red cross detection result: found_red={found_red}, red_center={red_center}, red_area={red_area}")
+
             if found_red:
+                self.get_logger().info("Red cross detected. Proceeding with movement logic.")
+                self.send_arm_command("look_for_red_cross")
+            else:
+                self.get_logger().info("Red cross not detected. Continuing bridge following.")
+
+            if found_red:
+                # We've detected the red cross - switch to precise parking mode
                 self.going_to_red = True
                 self.red_spot_center = red_center
                 self.red_spot_area = red_area
+                
+                # --- IMPROVED PRECISE PARKING STRATEGY ---
+                # Initialize cmd as an instance of Twist
+                cmd = Twist()
+                
+                # Calculate errors from the robot's center to the red cross center
+                robot_center_x = self.image_width // 2  # Assuming robot's center aligns with image center
+                robot_center_y = image_height // 2
+                error_x = self.red_spot_center[0] - robot_center_x
+                error_y = self.red_spot_center[1] - robot_center_y
+
+                # Log detailed positioning information
+                self.get_logger().info(f"RED CROSS: pos=({red_center[0]}, {red_center[1]}), " +
+                                      f"errors=({error_x}, {error_y}), area={red_area:.1f}")
+
+                # Define stricter thresholds for considering the robot centered
+                centered_x_threshold = 3  # Must be within 3 pixels horizontally (very strict)
+                centered_y_threshold = 3  # Must be within 3 pixels vertically (very strict)
+
+                # Check if the robot's center is precisely aligned with the red cross
+                if abs(error_x) < centered_x_threshold and abs(error_y) < centered_y_threshold:
+                    self.task_complete = True
+                    self.create_images_pdf()
+                    self.get_logger().info("Robot is centered on the red cross. Task complete!")
+                    return
+
+                # Adjust motion control for precise positioning
+                angular_kp = 0.003  # Base proportional gain for rotation
+                linear_kp = 0.002  # Base proportional gain for linear motion
+
+                # Increase gains for larger errors
+                if abs(error_x) > 30:
+                    angular_kp = 0.005
+                elif abs(error_x) < 10:
+                    angular_kp = 0.002
+
+                if abs(error_y) > 30:
+                    linear_kp = 0.003
+                elif abs(error_y) < 10:
+                    linear_kp = 0.001
+
+                # Calculate angular and linear speeds
+                angular_speed = min(0.15, abs(error_x) * angular_kp)
+                linear_speed = min(0.08, abs(error_y) * linear_kp)
+
+                # Determine direction for rotation and movement
+                cmd.angular.z = -np.sign(error_x) * angular_speed
+                cmd.linear.x = -np.sign(error_y) * linear_speed
+
+                # Apply near-zero deadband for fine adjustments
+                if abs(error_x) < 2:
+                    cmd.angular.z = 0.0
+
+                if abs(error_y) < 2:
+                    cmd.linear.x = 0.0
+
+                # Send the motion command
+                self.cmd_vel_pub.publish(cmd)
+                return
             else:
                 self.going_to_red = False
                 self.red_spot_center = None
                 self.red_spot_area = 0
 
-            if self.going_to_red and self.red_spot_center is not None:
-                error_x = self.red_spot_center[0] - self.image_width // 2
-                error_y = (image_height - self.red_spot_center[1])
-                # If red spot is centered and close, move a bit forward then stop
-                if abs(error_x) < 30 and error_y < 70:
-                    self.get_logger().info("Arrived at red spot! Nudging forward before final stop.")
-                    cmd = Twist()
-                    cmd.linear.x = 3.0  # Forward speed (m/s), adjust as needed
-                    cmd.angular.z = 0.0
-                    self.cmd_vel_pub.publish(cmd)
-                    time.sleep(6.0)  # Move forward for 0.7 seconds; tune as needed
-                    self.stop_robot()
-                    self.going_to_red = False
-                    self.task_complete = True
-                    self.create_images_pdf()
-                    return
 
-                else:
-                    cmd = Twist()
-                    cmd.linear.x = 7.5 if error_y > 60 else 0.05
-                    cmd.angular.z = -self.Kp * error_x
-                    self.get_logger().info(f"Approaching red spot. Error_x: {error_x}, Error_y: {error_y}, Speed: {cmd.linear.x}, Turn: {cmd.angular.z}")
-                    self.cmd_vel_pub.publish(cmd)
-                    return
 
             # If not going to red, proceed with bridge following
             mask = self.segmenter.segment(cv_image)
-            self.bridge_center = self.find_bridge_center(mask)
+            self.bridge_center = self.find_bridge_center(mask)  # Only pass the mask parameter
             
             if self.bridge_center is not None:
                 self.follow_bridge()
@@ -359,22 +529,55 @@ class BridgeFollower(Node):
     def show_detection(self, image, mask):
         debug_img = image.copy()
         
-        # Highlight grass areas in red
-        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        grass_mask = cv2.inRange(hsv, self.segmenter.grass_lower, self.segmenter.grass_upper)
-        debug_img[grass_mask > 0] = [0, 0, 255]  # Mark grass red
+        # Get the enhanced grass mask for visualization
+        if hasattr(self.segmenter, 'last_grass_mask'):
+            grass_mask = self.segmenter.last_grass_mask
+        else:
+            # Fall back to simple HSV-based detection if texture detection hasn't run yet
+            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+            grass_mask1 = cv2.inRange(hsv, self.segmenter.grass_lower, self.segmenter.grass_upper)
+            grass_mask2 = cv2.inRange(hsv, self.segmenter.grass_lower2, self.segmenter.grass_upper2)
+            grass_mask = cv2.bitwise_or(grass_mask1, grass_mask2)
         
-        # Highlight bridge in green
+        # Create a semi-transparent overlay for grass
+        overlay = debug_img.copy()
+        overlay[grass_mask > 0] = [0, 0, 255]  # Mark grass with red color
+        
+        # Apply semi-transparency
+        alpha = 0.6  # Transparency factor
+        cv2.addWeighted(overlay, alpha, debug_img, 1 - alpha, 0, debug_img)
+        
+        # Highlight bridge in green (fully opaque)
         debug_img[mask > 0] = [0, 255, 0]  # Mark bridge green
+        
+        # Add text to show what's being detected
+        cv2.putText(debug_img, 
+                  "GREEN: Bridge Path", 
+                  (10, 30), 
+                  cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        
+        cv2.putText(debug_img, 
+                  "RED: Grass/Obstacles", 
+                  (10, 60), 
+                  cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         
         # Show bridge center point
         if self.bridge_center:
             cv2.circle(debug_img, self.bridge_center, 10, (255, 0, 0), -1)
+            cv2.putText(debug_img, 
+                      "Navigation Target", 
+                      (self.bridge_center[0] - 70, self.bridge_center[1] - 15), 
+                      cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+        
         # Show red spot center
         if self.red_spot_center:
-            cv2.circle(debug_img, self.red_spot_center, 10, (0, 0, 255), 2)
+            cv2.circle(debug_img, self.red_spot_center, 10, (0, 255, 255), 2)
+            cv2.putText(debug_img, 
+                      "RED CROSS", 
+                      (self.red_spot_center[0] - 40, self.red_spot_center[1] - 15), 
+                      cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
         
-        cv2.imshow("Detection Debug", debug_img)
+        cv2.imshow("Enhanced Bridge Detection", debug_img)
         cv2.waitKey(1)
 
 

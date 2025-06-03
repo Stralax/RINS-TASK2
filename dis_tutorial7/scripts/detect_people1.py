@@ -364,8 +364,8 @@ class DetectFaces(Node):
             detect_image = cv_image.copy()
             
             # Draw a horizontal line showing the lower half boundary
-            cv2.line(detect_image, (0, lower_half_y), (cv_image.shape[1], lower_half_y), 
-                    (0, 255, 0), 2)
+            # cv2.line(detect_image, (0, lower_half_y), (cv_image.shape[1], lower_half_y), 
+            #         (0, 255, 0), 2)
             
             for det in results:
                 bbox = det.boxes.xyxy

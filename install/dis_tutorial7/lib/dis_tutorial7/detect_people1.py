@@ -60,13 +60,18 @@ class FaceData:
         self.gender_confidence = 0.0
         
     def update_position(self, new_position, new_normal, smoothing_factor=0.3):
-        """Update position with smoothing"""
-        self.position = (1 - smoothing_factor) * self.position + smoothing_factor * new_position
-        self.normal = (1 - smoothing_factor) * self.normal + smoothing_factor * new_normal
-        # Normalize the normal vector
-        self.normal = self.normal / np.linalg.norm(self.normal)
-        self.last_seen = time.time()
-        self.is_new = False
+        """Update position with smoothing and limit updates"""
+        if not hasattr(self, 'update_count'):
+            self.update_count = 0
+        
+        if self.update_count < 10:
+            self.position = (1 - smoothing_factor) * self.position + smoothing_factor * new_position
+            self.normal = (1 - smoothing_factor) * self.normal + smoothing_factor * new_normal
+            # Normalize the normal vector
+            self.normal = self.normal / np.linalg.norm(self.normal)
+            self.last_seen = time.time()
+            self.is_new = False
+            self.update_count += 1
     
     def update_gender(self, gender, confidence):
         """Update gender information"""
@@ -335,7 +340,7 @@ class DetectFaces(Node):
             # Send only the person's position - let robot_commander calculate approach
             pose_array.poses.append(person_pose)
             
-            self.get_logger().info(f"Publishing person at position={face_data.position[:2]}, normal={normal[:2]}")
+            # self.get_logger().info(f"Publishing person at position={face_data.position[:2]}, normal={normal[:2]}")
         
         # Publish the array
         self.positions_pub.publish(pose_array)

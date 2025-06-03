@@ -17,6 +17,8 @@ import time
 import subprocess
 import os
 import numpy as np
+from std_msgs.msg import String  # Add this import
+
 
 from action_msgs.msg import GoalStatus
 from builtin_interfaces.msg import Duration
@@ -966,7 +968,7 @@ class RobotCommander(Node):
     def position_arm_for_bird_detection(self):
         """Move the arm to a position ready for bird detection"""
         arm_command = String()
-        arm_command.data = 'manual:[0.0,0.0,0.1,0.5]'
+        arm_command.data = 'manual:[0.,0.3,0.3,0.8]'
         
         self.info(f"Positioning arm for bird detection: {arm_command.data}")
         self.arm_command_pub.publish(arm_command)
@@ -1052,7 +1054,7 @@ class RobotCommander(Node):
         if min_distance < 5.0:  # 5 meters max distance
             # Send arm command to point at bird
             arm_command = String()
-            arm_command.data = f'manual:[{alpha:.4f},0.0,0.1,0.5]'
+            arm_command.data = f'manual:[{alpha:.4f},0.3,0.3,0.8]'
             
             self.info(f"Positioning arm to photograph bird: {arm_command.data}")
             self.arm_command_pub.publish(arm_command)
@@ -1204,7 +1206,7 @@ def main(args=None):
     rc.info("Phase 1: Starting navigation through waypoints...")
     detected_faces = {}  # Dictionary to store face_id -> data mapping
     
-    rc.current_waypoint_idx = 20
+    rc.current_waypoint_idx = 0
     
     while rc.current_waypoint_idx < len(waypoints):
         # Process any pending callbacks
