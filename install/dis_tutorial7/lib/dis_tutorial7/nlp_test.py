@@ -7,6 +7,8 @@ import pygame
 import time
 from transformers import AutoFeatureExtractor, AutoModelForImageClassification
 import argparse
+import cv2
+import numpy as np
 
 # Updated list with only the specific birds
 COMMON_BIRDS = [
@@ -22,30 +24,30 @@ COMMON_BIRDS = [
 
 # Cleaned bird names for spoken dialogue
 BIRD_DISPLAY_NAMES = {
-    "002.laysan_albatross": "Laysan Albatross",
-    "012.yellow_headed_blackbird": "Yellow Headed Blackbird",
-    "014.indigo_bunting": "Indigo Bunting",
-    "025.pelagic_cormorant": "Pelagic Cormorant",
-    "029.american_crow": "American Crow",
-    "033.yellow_billed_cuckoo": "Yellow Billed Cuckoo",
-    "035.purple_finch": "Purple Finch",
-    "042.vermilion_flycatcher": "Vermilion Flycatcher",
-    "048.european_goldfinch": "European Goldfinch",
-    "050.eared_grebe": "Eared Grebe",
-    "059.california_gull": "California Gull",
-    "068.ruby_throated_hummingbird": "Ruby Throated Hummingbird",
-    "073.blue_jay": "Blue Jay",
-    "081.pied_kingfisher": "Pied Kingfisher",
-    "095.baltimore_oriole": "Baltimore Oriole",
-    "101.white_pelican": "White Pelican",
-    "106.horned_puffin": "Horned Puffin",
-    "108.white_necked_raven": "White Necked Raven",
-    "112.great_grey_shrike": "Great Grey Shrike",
-    "118.house_sparrow": "House Sparrow",
-    "134.cape_glossy_starling": "Cape Glossy Starling",
-    "138.tree_swallow": "Tree Swallow",
-    "144.common_tern": "Common Tern",
-    "191.red_headed_woodpecker": "Red Headed Woodpecker"
+    "002.Laysan_Albatross": "Laysan Albatross",
+    "012.Yellow_headed_Blackbird": "Yellow-headed Blackbird",
+    "014.Indigo_Bunting": "Indigo Bunting",
+    "025.Pelagic_Cormorant": "Pelagic Cormorant",
+    "029.American_Crow": "American Crow",
+    "033.Yellow_billed_Cuckoo": "Yellow-billed Cuckoo",
+    "035.Purple_Finch": "Purple Finch",
+    "042.Vermilion_Flycatcher": "Vermilion Flycatcher",
+    "048.European_Goldfinch": "European Goldfinch",
+    "050.Eared_Grebe": "Eared Grebe",
+    "059.California_Gull": "California Gull",
+    "068.Ruby_throated_Hummingbird": "Ruby-throated Hummingbird",
+    "073.Blue_Jay": "Blue Jay",
+    "081.Pied_Kingfisher": "Pied Kingfisher",
+    "095.Baltimore_Oriole": "Baltimore Oriole",
+    "101.White_Pelican": "White Pelican",
+    "106.Horned_Puffin": "Horned Puffin",
+    "108.White_necked_Raven": "White-necked Raven",
+    "112.Great_Grey_Shrike": "Great Grey Shrike",
+    "118.House_Sparrow": "House Sparrow",
+    "134.Cape_Glossy_Starling": "Cape Glossy Starling",
+    "138.Tree_Swallow": "Tree Swallow",
+    "144.Common_Tern": "Common Tern",
+    "191.Red_headed_Woodpecker": "Red-headed Woodpecker"
 }
 
 class DialogueSystem:
@@ -111,7 +113,7 @@ class DialogueSystem:
         ring_color = ring_data.get('color', 'unknown')
         ring_geo = ring_data.get('geo', 'unknown')
         
-        return f"in the {ring_geo} part of the area near a {ring_color} ring"
+        return f"in the {ring_geo} part of the park near the {ring_color} ring"
         
     def detect_gender(self, image_path):
         try:
@@ -130,8 +132,9 @@ class DialogueSystem:
             return "Unknown", 0.0
         
     def speak(self, text):
-        """Convert text to speech and play it."""
+        """Convert text to speech, play it, and update the conversation window."""
         print(f"Robot: {text}")
+        update_conversation_window("Conversation", f"Robot: {text}")  # Update the window with new text
         
         if self.test_mode:
             return
@@ -148,38 +151,30 @@ class DialogueSystem:
                 pygame.time.Clock().tick(10)
                 
             # Clean up the temporary file
-            time.sleep(0.5)  # Small delay to ensure file is not in use
+            time.sleep(0.5)
             if os.path.exists("temp_speech.mp3"):
                 os.remove("temp_speech.mp3")
         except Exception as e:
             print(f"Error in speech synthesis: {e}")
             
-    def listen(self, timeout=10, phrase_time_limit=40):
-        """Listen for user speech and convert to text."""
+    def listen(self, timeout=10, phrase_time_limit=60, gender="Person"):
+        """Listen for user speech, convert to text, and update the conversation window."""
         if self.test_mode:
-            # In test mode, simulate responses
-            response = input("Person (type response): ")
-            print(f"Person: {response}")
+            response = input(f"{gender} (type response): ")
+            print(f"{gender}: {response}")
+            update_conversation_window("Conversation", f"{gender}: {response}")  # Update the window with new text
             return response.lower()
-            
+        
         try:
             with sr.Microphone() as source:
                 print(f"Listening... (timeout: {timeout}s, phrase limit: {phrase_time_limit}s)")
                 self.recognizer.adjust_for_ambient_noise(source, duration=0.5)
                 audio = self.recognizer.listen(source, timeout=timeout, phrase_time_limit=phrase_time_limit)
-                
+        
             text = self.recognizer.recognize_google(audio)
-            print(f"Person: {text}")
+            print(f"{gender}: {text}")
+            update_conversation_window("Conversation", f"{gender}: {text}")  # Update the window with new text
             return text.lower()
-        except sr.WaitTimeoutError:
-            print("Listening timed out - no speech detected")
-            return None
-        except sr.UnknownValueError:
-            print("Could not understand audio")
-            return None
-        except sr.RequestError:
-            print("Could not request results from Google Speech Recognition service")
-            return None
         except Exception as e:
             print(f"Error in speech recognition: {e}")
             return None
@@ -225,13 +220,14 @@ class DialogueSystem:
                 
         return None
             
-    def talk_to_female(self):
+    def talk_to_female(self, gender="Female"):
         """Dialogue with a female person."""
+        reset_conversation_window("Conversation")  # Reset the window for a new conversation
         self.speak("Hey girlie, which is your favorite bird?")
         
         # Keep asking until we get a valid bird name
         while True:
-            bird_response = self.listen()
+            bird_response = self.listen(gender=gender)
             if not bird_response:
                 self.speak("I couldn't get that, could you repeat your favorite bird?")
                 continue
@@ -260,8 +256,10 @@ class DialogueSystem:
         return bird_name
 
             
-    def talk_to_male(self):
+    def talk_to_male(self, gender="Male"):
         """Dialogue with a male person with error handling for invalid and negative responses."""
+        reset_conversation_window("Conversation")  # Reset the window for a new conversation
+
         def confirm_and_respond(bird):
             bird_id = self.find_bird_by_name(bird)
             bird_display_name = BIRD_DISPLAY_NAMES.get(bird, bird)
@@ -272,12 +270,13 @@ class DialogueSystem:
             else:
                 self.speak(f"OK. The {bird_display_name} then. I haven't seen any around here yet.")
 
+
         bird_counts = {}  # Track bird occurrences
         self.speak("Hey broski, which is your favourite bird?")
         last_bird = None
 
         while True:
-            response = self.listen()
+            response = self.listen(gender=gender)
             if not response:
                 prompt = f"I couldn't get that, could you repeat your favorite bird?" if not last_bird else f"I couldn't get that, are you sure your favorite bird is {BIRD_DISPLAY_NAMES.get(last_bird, last_bird)}?"
                 self.speak(prompt)
@@ -345,6 +344,54 @@ class DialogueSystem:
             
         print(f"Favorite bird determined: {favorite_bird}")
         return favorite_bird
+
+conversation_history = ""  # Global variable to store the conversation history
+window_created = False  # Global flag to track if the window has been created
+
+def update_conversation_window(window_name, new_text, width=1000, height=400, font_scale=0.6, font_color=(255, 255, 255)):
+    """Update the conversation window with new text."""
+    global conversation_history, window_created
+    conversation_history += f"{new_text}\n"  # Append new text with a newline
+
+    # Create a blank image (black canvas)
+    canvas = np.zeros((height, width, 3), dtype=np.uint8)
+
+    # Split the conversation history into lines
+    lines = conversation_history.split('\n')  # Split by newline for proper rendering
+
+    # Render each line of text
+    y_offset = 30  # Initial Y offset for the text
+    line_height = 25  # Space between lines
+    for line in lines:
+        if line.strip():  # Skip empty lines
+            cv2.putText(
+                canvas,
+                line,
+                (10, y_offset),  # X and Y position
+                cv2.FONT_HERSHEY_SIMPLEX,
+                font_scale,
+                font_color,
+                1,
+                cv2.LINE_AA
+            )
+            y_offset += line_height
+            if y_offset > height - 10:  # Stop rendering if text exceeds the canvas height
+                break
+
+    # Display the canvas in a window
+    cv2.imshow(window_name, canvas)
+    cv2.waitKey(1)  # Refresh the window
+    window_created = True  # Set the flag to indicate the window has been created
+
+def reset_conversation_window(window_name):
+    """Reset the conversation window by clearing the history and closing the window."""
+    global conversation_history, window_created
+    conversation_history = ""  # Clear the conversation history
+    
+    if window_created:  # Only destroy the window if it has been created
+        cv2.destroyWindow(window_name)
+        window_created = False  # Reset the flag
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Bird preference dialogue system')

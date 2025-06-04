@@ -389,7 +389,7 @@ class ArmMoverAction(Node):
             tilt = math.atan2(-dz_cam_to_target, distance_xy)
             
             # 3. Calculate elbow to maintain camera orientation
-            elbow = -1.8 #tilt * -1  # (1 ali -1) Changed sign #STELOVANJE
+            elbow = -1.9 #tilt * -1  # (1 ali -1) Changed sign #STELOVANJE
             
             # 4. Calculate wrist to keep camera level
             wrist = tilt #-elbow + tilt  # Adjusted calculation

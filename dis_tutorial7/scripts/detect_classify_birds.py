@@ -142,7 +142,7 @@ class DetectClassifyBirds(Node):
 
         # Bird tracking
         self.tracked_birds = []  # List of BirdTracker objects
-        self.bird_distance_threshold = 0.5  # Distance threshold to consider it's the same bird (meters)
+        self.bird_distance_threshold = 4.0  # Distance threshold to consider it's the same bird (meters)
 
         # Create QoS profile for reliable image publishing
         qos_profile = QoSProfile(
@@ -194,7 +194,7 @@ class DetectClassifyBirds(Node):
         # Statistics
         self.detections_count = 0
         self.last_detection_time = time.time() - 10  # Initialize to avoid publishing immediately
-        self.min_detection_interval = 2.0  # Minimum seconds between detections
+        self.min_detection_interval = 5.0  # Minimum seconds between detections
         
         self.get_logger().info(f"Bird detector and classifier initialized. Listening on {self.input_topic}")
     
@@ -711,7 +711,7 @@ class DetectClassifyBirds(Node):
             text_marker.color.a = 0.8
             
             # CHANGED: Only show bird class name, not ID
-            if class_conf > 0.45:
+            if class_conf > 0.35: # 0.45
                 text_marker.text = bird_class  # Just the bird class name
             else:
                 text_marker.text = "Unknown Bird"

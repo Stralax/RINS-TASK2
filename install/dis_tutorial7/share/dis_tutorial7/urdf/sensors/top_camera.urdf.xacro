@@ -129,7 +129,7 @@
           <height>240</height>
         </image>
         <clip>
-          <near>0.3</near>
+          <near>0.2</near>
           <far>100</far>
         </clip>
         <optical_frame_id>${name}_rgb_camera_optical_frame</optical_frame_id>

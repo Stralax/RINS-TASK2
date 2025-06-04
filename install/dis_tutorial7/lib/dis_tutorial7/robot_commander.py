@@ -90,9 +90,9 @@ class RobotCommander(Node):
 
         self.detected_rings = {}  # Dictionary to track detected rings by ID
         self.ring_markers = None  # Latest ring markers message
-        self.ring_approach_distance = 0.5  # Distance to stay from ring in meters
+        self.ring_approach_distance = 0.7  # Distance to stay from ring in meters
         self.global_costmap = None  # Store the global costmap
-        self.ring_approach_timeout = 60.0  # Timeout for approaching a ring
+        self.ring_approach_timeout = 120.0  # Timeout for approaching a ring
         self.current_ring_id = None  # Currently targeted ring ID
         self.already_approached_rings = set()  # Track which rings we've approached
         self.expected_ring_count = 4  # We expect to find 4 rings total
@@ -1049,9 +1049,9 @@ class RobotCommander(Node):
             alpha += 2 * np.pi
         
         self.info(f"Bird {bird_name} (ID {nearest_bird}) at distance {min_distance:.2f}m, angle {np.degrees(alpha):.1f}°")
-        
+        alpha = -alpha
         # If bird is within reasonable range
-        if min_distance < 5.0:  # 5 meters max distance
+        if min_distance < 2.0:  # 5 meters max distance
             # Send arm command to point at bird
             arm_command = String()
             arm_command.data = f'manual:[{alpha:.4f},0.3,0.3,0.8]'
@@ -1207,6 +1207,7 @@ def main(args=None):
     detected_faces = {}  # Dictionary to store face_id -> data mapping
     
     rc.current_waypoint_idx = 0
+    waypoints.append(waypoints[0])  # Add the first waypoint again to ensure we loop back
     
     while rc.current_waypoint_idx < len(waypoints):
         # Process any pending callbacks
@@ -1278,8 +1279,9 @@ def main(args=None):
     
         # Spin around to detect all rings at this waypoint
         rc.info("Spinning to look for rings...")
-        rc.spin(-1.57)  # 360 degrees
-        rc.spin(3.14)  # 180 degrees
+        if rc.current_waypoint_idx != 0:
+            rc.spin(-1.57)  # 360 degrees
+            rc.spin(3.14)  # 180 degrees
         while not rc.isTaskComplete():
             rclpy.spin_once(rc, timeout_sec=0.1)
             time.sleep(0.1)
@@ -1394,7 +1396,7 @@ def main(args=None):
     rc.info("Phase 1 completed: Traversed all waypoints!")
     rc.info(f"Detected {len(detected_faces)} unique faces and approached {len(rc.already_approached_rings)} rings.")
 
-    
+
     # Phase 2: Visit and greet each detected face
     rc.info("Phase 2: Starting face greeting sequence...")
     
