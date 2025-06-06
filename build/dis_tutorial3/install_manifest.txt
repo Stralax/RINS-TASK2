@@ -313,6 +313,7 @@
 /home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3//maps/mapNew.yaml
 /home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3//maps/map_path_order.png
 /home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3//maps/map.pgm
+/home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3//maps/mapPAST.pgm
 /home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3//maps/Old.pgm
 /home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3//maps/map_path_points.pgm
 /home/beta/Desktop/RINS-TASK2/install/dis_tutorial3/share/dis_tutorial3//maps/mapOld.yaml

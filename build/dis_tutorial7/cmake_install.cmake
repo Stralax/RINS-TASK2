@@ -65,6 +65,7 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
     "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/skeletonized_path_2.py"
     "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/detect_classify_birds.py"
     "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/nlp_test.py"
+    "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/speak.py"
     "/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/rings.py"
     )
 endif()

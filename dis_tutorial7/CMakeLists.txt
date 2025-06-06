@@ -53,7 +53,8 @@ install(PROGRAMS
   scripts/skeletonized_path_2.py
   scripts/detect_classify_birds.py
   scripts/nlp_test.py
-  # scripts/rings_kice.py
+  # scripts/rings_kice.py 
+  scripts/speak.py
   scripts/rings.py
   DESTINATION lib/${PROJECT_NAME})
 

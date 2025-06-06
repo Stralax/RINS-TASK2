@@ -13,6 +13,7 @@ import torch.nn as nn
 from torchvision import transforms, models
 from ultralytics import YOLO
 import os
+import subprocess
 import time
 
 from sklearn.decomposition import PCA
@@ -31,6 +32,8 @@ from std_msgs.msg import String
 
 from dataclasses import dataclass
 from PIL import Image as PILImage
+from dataclasses import dataclass, field
+
 
 @dataclass
 class BirdTracker:
@@ -40,6 +43,7 @@ class BirdTracker:
     marker_id: int        # Assigned marker ID
     bird_class: str = ""  # Classified bird species
     confidence: float = 0.0  # Classification confidence
+    creation_time: float = field(default_factory=time.time)  # Time when marker was created
 
 # Bird classifier model from bird_classifier.py
 class BirdClassifierModel(nn.Module):
@@ -77,10 +81,12 @@ class DetectClassifyBirds(Node):
                 ('bird_class_id', 14),  # COCO class ID for bird
                 ('custom_model', False),  # Set to True if using a custom bird model
                 ('classifier_model_path', 'models/bird_classifier.pth'),  # Path to bird classifier model
+                # ('tts_script_path', '/home/beta/Desktop/RINS-TASK2/dis_tutorial7/scripts/speak.py'),  # Path to TTS script
             ]
         )
         
         # Get parameters
+        # self.tts_script_path = self.get_parameter('tts_script_path').get_parameter_value().string_value
         self.model_path = self.get_parameter('model_path').get_parameter_value().string_value
         self.confidence_threshold = self.get_parameter('confidence_threshold').get_parameter_value().double_value
         self.device = self.get_parameter('device').get_parameter_value().string_value
@@ -102,6 +108,12 @@ class DetectClassifyBirds(Node):
             self.get_logger().error(f"Failed to load YOLO model: {e}")
             raise
         
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        self.tts_script_path = os.path.join(script_dir, "speak.py")
+        # if not os.path.exists(self.tts_script_path):
+        #     self.get_logger().warn(f"TTS script not found at {self.tts_script_path}. Using default path.")
+        #     self.tts_script_path = os.path.expanduser("~/colcon_ws/src/dis_tutorial7/speak.py")
+
         # Load bird classifier model
         self.get_logger().info(f"Loading bird classifier from {self.classifier_model_path}...")
         try:
@@ -143,6 +155,10 @@ class DetectClassifyBirds(Node):
         # Bird tracking
         self.tracked_birds = []  # List of BirdTracker objects
         self.bird_distance_threshold = 4.0  # Distance threshold to consider it's the same bird (meters)
+        self.greeted_birds = set() 
+        self.photos = set()  # Set to track saved bird photos
+        self.allowed_birds = set([
+            "common tern", "pied kingfisher", "american crow", "yellow headed blackbird"])
 
         # Create QoS profile for reliable image publishing
         qos_profile = QoSProfile(
@@ -309,6 +325,26 @@ class DetectClassifyBirds(Node):
         except Exception as e:
             self.get_logger().error(f"Error classifying bird: {e}")
             return "Unknown", 0.0
+    
+    def sayGreeting(self, text=None):
+        """Use text-to-speech to say greeting"""
+        if text is None:
+            text = self.greeting_text
+            
+        try:
+            # Print to terminal
+            self.get_logger().info(f"Speaking: {text}")
+            
+            # Check if file exists before running
+            if os.path.exists(self.tts_script_path):
+                self.get_logger().info(f"Running TTS script: {self.tts_script_path}")
+                subprocess.Popen(["python3", self.tts_script_path, text])
+            else:
+                self.get_logger().error(f"TTS script not found at: {self.tts_script_path}")
+                # Just print the text as fallback
+                print(f"ROBOT SAYS: {text}")
+        except Exception as e:
+            self.get_logger().error(f"Error running TTS script: {e}")   
 
     def image_callback(self, msg):
         """Process incoming images to detect and classify birds"""
@@ -341,7 +377,7 @@ class DetectClassifyBirds(Node):
             # Process detections
             bird_detected = False
             current_time = time.time()
-            
+            # greeted = False
             for result in results:
                 boxes = result.boxes.xyxy.cpu().numpy()
                 confs = result.boxes.conf.cpu().numpy()
@@ -358,7 +394,7 @@ class DetectClassifyBirds(Node):
                     
                     # Draw rectangle and confidence on visualization image
                     # Use color based on confidence (red if < 0.9, green if >= 0.9)
-                    color = (0, 255, 0) if conf >= 0.85 else (0, 165, 255)
+                    color = (0, 255, 0) if conf >= 0.85 else (0, 165, 255)  #0.85
                     
                     cv2.rectangle(viz_image, (x1, y1), (x2, y2), color, 2)
                     cv2.putText(
@@ -373,7 +409,7 @@ class DetectClassifyBirds(Node):
                     
                     # Only publish if enough time has passed since last detection
                     # AND confidence is at least 0.90
-                    if current_time - self.last_detection_time >= self.min_detection_interval and conf >= 0.90:
+                    if conf >= 0.90: # or (len(self.tracked_birds) == 3 and conf >= 80)): # 0.90 current_time - self.last_detection_time >= self.min_detection_interval and
                         # Crop the bird image
                         bird_img = cv_image[y1:y2, x1:x2].copy()
                         
@@ -399,17 +435,40 @@ class DetectClassifyBirds(Node):
                         # Create a labeled image for display
                         display_img = bird_img_with_margin.copy()
                         label = f"{bird_class}: {class_confidence:.2f}"
+
+                        try:
+                            # Create img directory if it doesn't exist
+                            img_folder = os.path.expanduser("~/Desktop/RINS-TASK2/img")
+                            os.makedirs(img_folder, exist_ok=True)
+                            
+                            # Create filename with timestamp and bird class
+                            # timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                            file_name = bird_class[4:]
+                            clean_bird_name = f"{bird_class[4:].replace('_',' ')}"
+
+                            # Save the image
+                            filename = f"{file_name}.jpg"
+                            filepath = os.path.join(img_folder, filename)
+                            self.get_logger().info(f"Saving bird {clean_bird_name}")
+                            if clean_bird_name.lower() in self.allowed_birds and clean_bird_name not in self.photos:
+                                cv2.imwrite(filepath, display_img)
+                                self.get_logger().info(f"Saved bird image to {filepath}")
+                                self.photos.add(clean_bird_name)
+                            
+                        except Exception as e:
+                            self.get_logger().error(f"Failed to save bird image: {e}")
+                        
                         
                         # Add label to the image
-                        cv2.putText(
-                            display_img,
-                            label,
-                            (10, 30),
-                            cv2.FONT_HERSHEY_SIMPLEX,
-                            0.7,
-                            (0, 255, 0) if class_confidence > 0.7 else (0, 165, 255),
-                            2
-                        )
+                        # cv2.putText(
+                        #     display_img,
+                        #     label,
+                        #     (10, 30),
+                        #     cv2.FONT_HERSHEY_SIMPLEX,
+                        #     0.7,
+                        #     (0, 255, 0) if class_confidence > 0.7 else (0, 165, 255),
+                        #     2
+                        # )
                         
                         # Display the cropped bird image with classification
                         cv2.imshow("Detected Bird", display_img)
@@ -437,7 +496,11 @@ class DetectClassifyBirds(Node):
                                 self.publish_bird_marker(position_3d, normal, conf, bird_class, class_confidence)
                             
                             self.get_logger().info(f"Bird detected: {bird_class} ({class_confidence:.2f})! Total: {self.detections_count}")
-                            
+                            bird_message = f"{bird_class[4:].replace('_',' ')}"
+                            if bird_message not in self.greeted_birds and bird_message.lower() in self.allowed_birds:
+                                self.sayGreeting(bird_message)
+                                self.greeted_birds.add(bird_message)
+
                             # Break after publishing first detection to avoid flooding
                             break
                         except CvBridgeError as e:
@@ -569,25 +632,38 @@ class DetectClassifyBirds(Node):
                 self.get_logger().warn("Could not transform bird position or normal to map frame")
                 return
             
+            # Check if there's already a marker within 2 meters
+            too_close = False
+            for bird in self.tracked_birds:
+                distance = np.linalg.norm(map_position - bird.position)
+                if distance < 1.5:  # 2 meter radius
+                    self.get_logger().info(f"Ignoring new bird - too close to marker {bird.marker_id} (distance: {distance:.2f}m)")
+                    too_close = True
+                    break
+            
+            if too_close:
+                return  # Skip creating new marker
+                
+                
             # Check if this bird is already being tracked
             marker_id = None
             is_new_bird = True
             
-            # Check against existing birds
-            for i, bird in enumerate(self.tracked_birds):
-                distance = np.linalg.norm(map_position - bird.position)
-                if distance < self.bird_distance_threshold:
-                    # Update existing bird
-                    self.tracked_birds[i].position = map_position
-                    self.tracked_birds[i].normal = map_normal
-                    self.tracked_birds[i].last_seen = time.time()
-                    self.tracked_birds[i].bird_class = bird_class
-                    self.tracked_birds[i].confidence = class_conf
-                    marker_id = bird.marker_id
-                    is_new_bird = False
-                    self.get_logger().info(f"Updated existing bird #{marker_id}, distance: {distance:.2f}m")
-                    break
-            
+            # # Check against existing birds
+            # for i, bird in enumerate(self.tracked_birds):
+            #     distance = np.linalg.norm(map_position - bird.position)
+            #     if distance <= self.bird_distance_threshold and bird.marker_id != 0:  # Changed to <= for updates
+            #         # Update existing bird
+            #         # self.tracked_birds[i].position = map_position
+            #         # self.tracked_birds[i].normal = map_normal
+            #         self.tracked_birds[i].last_seen = time.time()
+            #         self.tracked_birds[i].bird_class = bird_class[4:]
+            #         self.tracked_birds[i].confidence = class_conf
+            #         marker_id = bird.marker_id
+            #         is_new_bird = False
+            #         self.get_logger().info(f"Updated existing bird #{marker_id}, distance: {distance:.2f}m")
+            #         break
+                
             # If it's a new bird, add it to tracking
             if is_new_bird:
                 marker_id = self.marker_id
@@ -630,11 +706,11 @@ class DetectClassifyBirds(Node):
             position_marker.color.a = 0.8
             
             # Set lifetime (0 = forever)
-            lifetime = 0.0  
-            if lifetime > 0:
-                position_marker.lifetime.sec = int(lifetime)
-                position_marker.lifetime.nanosec = int((lifetime % 1) * 1e9)
-            
+            # lifetime = 0.0  
+            # if lifetime >= 0:
+            position_marker.lifetime.sec = int(self.marker_lifetime)
+            # position_marker.lifetime.nanosec = int((lifetime % 1) * 1e9)
+        
             marker_array.markers.append(position_marker)
             
             # Normal direction marker (arrow)
@@ -686,9 +762,10 @@ class DetectClassifyBirds(Node):
             normal_marker.color.a = 0.8
             
             # Set lifetime
-            if lifetime > 0:
-                normal_marker.lifetime.sec = int(lifetime)
-                normal_marker.lifetime.nanosec = int((lifetime % 1) * 1e9)
+            # if lifetime >= 0:
+            #     normal_marker.lifetime.sec = int(lifetime)
+            #     normal_marker.lifetime.nanosec = int((lifetime % 1) * 1e9)
+            normal_marker.lifetime.sec = int(self.marker_lifetime)
             
             marker_array.markers.append(normal_marker)
             
@@ -711,15 +788,17 @@ class DetectClassifyBirds(Node):
             text_marker.color.a = 0.8
             
             # CHANGED: Only show bird class name, not ID
-            if class_conf > 0.35: # 0.45
+            if class_conf >= 0.16: # 0.45
                 text_marker.text = bird_class  # Just the bird class name
             else:
                 text_marker.text = "Unknown Bird"
             
+            text_marker.lifetime.sec = int(self.marker_lifetime)
+
             # Set lifetime
-            if lifetime > 0:
-                text_marker.lifetime.sec = int(lifetime)
-                text_marker.lifetime.nanosec = int((lifetime % 1) * 1e9)
+            # if lifetime >= 0:
+            #     text_marker.lifetime.sec = int(lifetime)
+            #     text_marker.lifetime.nanosec = int((lifetime % 1) * 1e9)
             
             marker_array.markers.append(text_marker)
             

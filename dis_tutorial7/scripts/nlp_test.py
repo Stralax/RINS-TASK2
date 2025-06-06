@@ -10,44 +10,51 @@ import argparse
 import cv2
 import numpy as np
 
-# Updated list with only the specific birds
+import sys
+import os
+
+# Redirect stderr to /dev/null
+f = open(os.devnull, 'w')
+sys.stderr = f
+
+# Updated list with only the specific birds - format now matches BIRD_DISPLAY_NAMES keys
 COMMON_BIRDS = [
-    "002.laysan_albatross", "012.yellow_headed_blackbird", "014.indigo_bunting",
-    "025.pelagic_cormorant", "029.american_crow", "033.yellow_billed_cuckoo",
-    "035.purple_finch", "042.vermilion_flycatcher", "048.european_goldfinch",
-    "050.eared_grebe", "059.california_gull", "068.ruby_throated_hummingbird",
-    "073.blue_jay", "081.pied_kingfisher", "095.baltimore_oriole",
-    "101.white_pelican", "106.horned_puffin", "108.white_necked_raven",
-    "112.great_grey_shrike", "118.house_sparrow", "134.cape_glossy_starling",
-    "138.tree_swallow", "144.common_tern", "191.red_headed_woodpecker"
+    "002.Laysan_Albatross", "012.Yellow_headed_Blackbird", "014.Indigo_Bunting",
+    "025.Pelagic_Cormorant", "029.American_Crow", "033.Yellow_billed_Cuckoo",
+    "035.Purple_Finch", "042.Vermilion_Flycatcher", "048.European_Goldfinch",
+    "050.Eared_Grebe", "059.California_Gull", "068.Ruby_throated_Hummingbird",
+    "073.Blue_Jay", "081.Pied_Kingfisher", "095.Baltimore_Oriole",
+    "101.White_Pelican", "106.Horned_Puffin", "108.White_necked_Raven",
+    "112.Great_Grey_Shrike", "118.House_Sparrow", "134.Cape_Glossy_Starling",
+    "138.Tree_Swallow", "144.Common_Tern", "191.Red_headed_Woodpecker"
 ]
 
 # Cleaned bird names for spoken dialogue
 BIRD_DISPLAY_NAMES = {
-    "002.Laysan_Albatross": "Laysan Albatross",
-    "012.Yellow_headed_Blackbird": "Yellow-headed Blackbird",
-    "014.Indigo_Bunting": "Indigo Bunting",
-    "025.Pelagic_Cormorant": "Pelagic Cormorant",
-    "029.American_Crow": "American Crow",
-    "033.Yellow_billed_Cuckoo": "Yellow-billed Cuckoo",
-    "035.Purple_Finch": "Purple Finch",
-    "042.Vermilion_Flycatcher": "Vermilion Flycatcher",
-    "048.European_Goldfinch": "European Goldfinch",
-    "050.Eared_Grebe": "Eared Grebe",
-    "059.California_Gull": "California Gull",
-    "068.Ruby_throated_Hummingbird": "Ruby-throated Hummingbird",
-    "073.Blue_Jay": "Blue Jay",
-    "081.Pied_Kingfisher": "Pied Kingfisher",
-    "095.Baltimore_Oriole": "Baltimore Oriole",
-    "101.White_Pelican": "White Pelican",
-    "106.Horned_Puffin": "Horned Puffin",
-    "108.White_necked_Raven": "White-necked Raven",
-    "112.Great_Grey_Shrike": "Great Grey Shrike",
-    "118.House_Sparrow": "House Sparrow",
-    "134.Cape_Glossy_Starling": "Cape Glossy Starling",
-    "138.Tree_Swallow": "Tree Swallow",
-    "144.Common_Tern": "Common Tern",
-    "191.Red_headed_Woodpecker": "Red-headed Woodpecker"
+    "002.Laysan_Albatross": "laysan albatross",
+    "012.Yellow_headed_Blackbird": "yellow-headed blackbird",
+    "014.Indigo_Bunting": "indigo bunting",
+    "025.Pelagic_Cormorant": "pelagic cormorant",
+    "029.American_Crow": "american crow",
+    "033.Yellow_billed_Cuckoo": "yellow-billed cuckoo",
+    "035.Purple_Finch": "purple finch",
+    "042.Vermilion_Flycatcher": "vermilion flycatcher",
+    "048.European_Goldfinch": "european goldfinch",
+    "050.Eared_Grebe": "eared grebe",
+    "059.California_Gull": "california gull",
+    "068.Ruby_throated_Hummingbird": "ruby-throated hummingbird",
+    "073.Blue_Jay": "blue jay",
+    "081.Pied_Kingfisher": "pied kingfisher",
+    "095.Baltimore_Oriole": "baltimore oriole",
+    "101.White_Pelican": "white pelican",
+    "106.Horned_Puffin": "horned puffin",
+    "108.White_necked_Raven": "white-necked raven",
+    "112.Great_Grey_Shrike": "great grey shrike",
+    "118.House_Sparrow": "house sparrow",
+    "134.Cape_Glossy_Starling": "cape glossy starling",
+    "138.Tree_Swallow": "tree swallow",
+    "144.Common_Tern": "common tern",
+    "191.Red_headed_Woodpecker": "red-headed woodpecker"
 }
 
 class DialogueSystem:
@@ -100,14 +107,15 @@ class DialogueSystem:
         
     def get_bird_location_description(self, bird_id):
         """Generate a location description based on the associated ring"""
-        if not self.detected_birds or not self.detected_rings or bird_id not in self.detected_birds:
-            return "somewhere in the area"
+        # if not self.detected_birds or not self.detected_rings or bird_id not in self.detected_birds:
+        #     return "somewhere in the area"
         
         bird_data = self.detected_birds[bird_id]
         ring_id = bird_data.get('associated_ring')
+        print(f"Bird ID: {bird_id}, Associated Ring ID: {ring_id}")
         
-        if not ring_id or ring_id not in self.detected_rings:
-            return "somewhere in the area"
+        # if ring_id is None:
+        #     return "somewhere in the area"
         
         ring_data = self.detected_rings[ring_id]
         ring_color = ring_data.get('color', 'unknown')
@@ -208,14 +216,22 @@ class DialogueSystem:
     def find_bird_by_name(self, bird_name):
         """Find a bird ID based on name from detected birds"""
         if not self.detected_birds:
+            print("No detected birds available.")
             return None
             
         # Clean input name
         bird_name = bird_name.lower().replace('_', ' ')
-        
+        bird_name = bird_name[4:]
         for bird_id, bird_data in self.detected_birds.items():
-            detected_name = bird_data.get('name', '').lower()
-            if bird_name in detected_name or detected_name in bird_name:
+            detected_name = bird_data.get('name', '')
+            detected_display_name = BIRD_DISPLAY_NAMES.get(detected_name, '').lower()
+            detected_display_name = detected_display_name.replace('-', ' ')
+            print(f"Checking bird: {detected_display_name} against {bird_name}")
+            if bird_name in detected_display_name or detected_display_name in bird_name:
+                print(f"Found matching bird: {detected_name} with ID {bird_id}")
+                return bird_id
+            if bird_name == detected_name:
+                print(f"==: {detected_name} with ID {bird_id}")
                 return bird_id
                 
         return None
@@ -240,10 +256,10 @@ class DialogueSystem:
             # If we get here, we have a valid bird name
             break
         
-        # Try to find this bird in our detected birds    
+        # Try to find this bird in our detected birds  
         bird_id = self.find_bird_by_name(bird_name)
-        
-        if bird_id and bird_id in self.detected_birds:
+        print(f"Detected bird ID: {bird_id} for bird name: {bird_name}")
+        if bird_id is not None:
             # We have this bird in our detected birds
             bird_display_name = BIRD_DISPLAY_NAMES.get(bird_name, bird_name)
             location = self.get_bird_location_description(bird_id)
@@ -264,7 +280,7 @@ class DialogueSystem:
             bird_id = self.find_bird_by_name(bird)
             bird_display_name = BIRD_DISPLAY_NAMES.get(bird, bird)
             
-            if bird_id and bird_id in self.detected_birds:
+            if bird_id is not None:
                 location = self.get_bird_location_description(bird_id)
                 self.speak(f"OK. The {bird_display_name} then. There is one {location}.")
             else:

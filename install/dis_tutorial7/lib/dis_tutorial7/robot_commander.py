@@ -90,13 +90,13 @@ class RobotCommander(Node):
 
         self.detected_rings = {}  # Dictionary to track detected rings by ID
         self.ring_markers = None  # Latest ring markers message
-        self.ring_approach_distance = 0.7  # Distance to stay from ring in meters
+        self.ring_approach_distance = 0.62 # 0.7  # Distance to stay from ring in meters
         self.global_costmap = None  # Store the global costmap
         self.ring_approach_timeout = 120.0  # Timeout for approaching a ring
         self.current_ring_id = None  # Currently targeted ring ID
         self.already_approached_rings = set()  # Track which rings we've approached
         self.expected_ring_count = 4  # We expect to find 4 rings total
-
+        self.bird_photo_timer = None
 
         # ROS2 subscribers
         self.create_subscription(DockStatus,
@@ -431,7 +431,7 @@ class RobotCommander(Node):
             geo = "unknown"
             if ring_pos[1] < -1.00:
                 geo = "west"
-            elif ring_pos[1] < 3.00:
+            elif ring_pos[1] < 3.50:
                 geo = "central"
             else:
                 geo = "east"
@@ -550,14 +550,19 @@ class RobotCommander(Node):
                 self.info(f"Detected bird ID {bird_id} ({bird_name}) at position {bird_pos}")
         
         # Update our stored birds
-        self.detected_birds = bird_markers
+        for bird_id, bird_data in bird_markers.items():
+            if bird_id not in self.detected_birds:
+                self.detected_birds[bird_id] = bird_data
+            else:
+                # Update existing bird data if necessary
+                self.detected_birds[bird_id].update(bird_data)
         
         # If we have new or updated birds, match them to rings
         if updated_birds:
             self._match_birds_to_rings()
         
         # Check if we're near a ring and should try to photograph birds
-        if self.current_task == 'ring_approach' and self.arm_in_photo_position:
+        if self.arm_in_photo_position:
             self.try_photograph_birds()
 
     # Add new method to match birds with rings
@@ -842,7 +847,7 @@ class RobotCommander(Node):
             self.arm_in_photo_position = False
             
             # Create a timer that will execute only once
-            self.position_arm_timer = self.create_timer(2.0, self._position_arm_callback)
+            self.position_arm_timer = self.create_timer(0.5, self._position_arm_callback)
             
         return result
 
@@ -850,7 +855,8 @@ class RobotCommander(Node):
     def _position_arm_callback(self):
         # Cancel the timer so it only runs once
         self.position_arm_timer.cancel()
-        
+        self.arm_in_photo_position = True
+
         # Call the actual function
         self.position_arm_for_bird_detection()
 
@@ -972,7 +978,16 @@ class RobotCommander(Node):
         
         self.info(f"Positioning arm for bird detection: {arm_command.data}")
         self.arm_command_pub.publish(arm_command)
-        self.arm_in_photo_position = True
+        # self.arm_in_photo_position = True
+
+    def after_detection(self):
+        """Move the arm to a position ready for bird detection"""
+        arm_command = String()
+        arm_command.data = 'manual:[0.,-0.45,2.8,-0.8]'
+        
+        self.info(f"Positioning arm for bird detection: {arm_command.data}")
+        self.arm_command_pub.publish(arm_command)
+        self.arm_in_photo_position = False
 
     # Add function to calculate arm angle and take bird photo
     def try_photograph_birds(self):
@@ -1051,7 +1066,7 @@ class RobotCommander(Node):
         self.info(f"Bird {bird_name} (ID {nearest_bird}) at distance {min_distance:.2f}m, angle {np.degrees(alpha):.1f}°")
         alpha = -alpha
         # If bird is within reasonable range
-        if min_distance < 2.0:  # 5 meters max distance
+        if min_distance < 1.0:  # 5 meters max distance
             # Send arm command to point at bird
             arm_command = String()
             arm_command.data = f'manual:[{alpha:.4f},0.3,0.3,0.8]'
@@ -1060,8 +1075,8 @@ class RobotCommander(Node):
             self.arm_command_pub.publish(arm_command)
             
             # Create timer that self-cancels after one execution
-            self.bird_photo_timer = self.create_timer(2.0, 
-                lambda bird_id=nearest_bird, name=bird_name: self._take_bird_picture_callback(bird_id, name))
+            # self.bird_photo_timer = self.create_timer(0.3, 
+                # lambda bird_id=nearest_bird, name=bird_name[4:].replace('_', ' '): self._take_bird_picture_callback(bird_id, name))
             
             # Update last photo time
             self.last_bird_photo_time = current_time
@@ -1069,12 +1084,13 @@ class RobotCommander(Node):
     # Add this new helper function
     def _take_bird_picture_callback(self, bird_id, bird_name):
         """Helper function for the timer callback that cancels itself after execution"""
+        # Take the picture
+        self.take_bird_picture(bird_id, bird_name)
+        
         # Cancel the timer so it only runs once
         if hasattr(self, 'bird_photo_timer'):
             self.bird_photo_timer.cancel()
             
-        # Take the picture
-        self.take_bird_picture(bird_id, bird_name)
 
     def take_bird_picture(self, bird_id, bird_name):
         """Take a picture of the bird using the z=-99.3 special value"""
@@ -1086,15 +1102,15 @@ class RobotCommander(Node):
         
         # Tell the arm_mover to save the image
         self.create_publisher(Point, "/target_point", 10).publish(target_point)
-        
+        self.create_publisher(String, "/target_bird_name", 10).publish(String(data=bird_name))
         self.info(f"Taking picture of {bird_name} (ID {bird_id})")
         
         # Mark bird as photographed
         self.already_photographed_birds.add(bird_id)
         
         # Announce the bird sighting
-        bird_message = f"I see a {bird_name} bird!"
-        self.sayGreeting(bird_message)
+        # bird_message = f"I see a {bird_name} bird!"
+        # self.sayGreeting(bird_message)
     
     def sayGreeting(self, text=None):
         """Use text-to-speech to say greeting"""
@@ -1201,6 +1217,38 @@ def main(args=None):
     rc.info("Waiting for waypoints from /global_path...")
     while not waypoints:
         rclpy.spin_once(rc, timeout_sec=0.5)
+
+    # Publisher for waypoint markers
+    waypoint_marker_pub = rc.create_publisher(MarkerArray, '/waypoint_markers', 10)
+
+    def publish_waypoint_markers(waypoints):
+        """Publish waypoints as cubic markers."""
+        marker_array = MarkerArray()
+        for i, (x, y, yaw) in enumerate(waypoints):
+            marker = Marker()
+            marker.header.frame_id = 'map'
+            marker.header.stamp = rc.get_clock().now().to_msg()
+            marker.ns = 'waypoints'
+            marker.id = i
+            marker.type = Marker.CUBE
+            marker.action = Marker.ADD
+            marker.pose.position.x = x
+            marker.pose.position.y = y
+            marker.pose.position.z = 0.0
+            marker.pose.orientation = rc.YawToQuaternion(yaw)
+            marker.scale.x = 0.2
+            marker.scale.y = 0.2
+            marker.scale.z = 0.2
+            marker.color.r = 64.0 / 255.0
+            marker.color.g = 224.0 / 255.0
+            marker.color.b = 208.0 / 255.0
+            marker.color.a = 0.8
+            marker_array.markers.append(marker)
+        waypoint_marker_pub.publish(marker_array)
+
+    # Publish waypoint markers
+    rc.info("Publishing waypoint markers...")
+    publish_waypoint_markers(waypoints)
     
     # Phase 1: Traverse waypoints, approach rings, and collect face locations
     rc.info("Phase 1: Starting navigation through waypoints...")
@@ -1339,7 +1387,7 @@ def main(args=None):
                         rclpy.spin_once(rc, timeout_sec=0.1)  # Process any callbacks
 
                         # Try to photograph birds
-                        rc.try_photograph_birds()
+                        # rc.try_photograph_birds()
                         # Remove this ring from the list to approach
                         rings_to_approach = [(r_id, r_data) for r_id, r_data in rings_to_approach 
                                             if r_id != nearest_ring_id]
@@ -1372,6 +1420,8 @@ def main(args=None):
                         for ring_id, ring_data in rc.detected_rings.items():
                             if ring_id not in rc.already_approached_rings:
                                 rings_to_approach.append((ring_id, ring_data))
+
+                        rc.after_detection()
                     else:
                         rc.error(f"Failed to approach ring {nearest_ring_id}")
                         # Remove this ring from the list to avoid endless retrying
@@ -1475,7 +1525,7 @@ def main(args=None):
         # Greet the person using gender information
         greeting_text = f"Hello {face_gender}! Nice to meet you, person number {face_id}!"
 
-        
+        rc.info(f"birds detected: {rc.detected_birds}")
         rc.nlp_system.set_detected_birds_and_rings(rc.detected_birds, rc.detected_rings)
 
         # Now call the appropriate dialogue function

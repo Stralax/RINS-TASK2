@@ -42,6 +42,7 @@
 /home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/lib/dis_tutorial7/skeletonized_path_2.py
 /home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/lib/dis_tutorial7/detect_classify_birds.py
 /home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/lib/dis_tutorial7/nlp_test.py
+/home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/lib/dis_tutorial7/speak.py
 /home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/lib/dis_tutorial7/rings.py
 /home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/share/ament_index/resource_index/package_run_dependencies/dis_tutorial7
 /home/beta/Desktop/RINS-TASK2/install/dis_tutorial7/share/ament_index/resource_index/parent_prefix_path/dis_tutorial7

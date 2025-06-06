@@ -42,7 +42,7 @@ class ArmMoverAction(Node):
         super().__init__('transform_point')
 
         # Image saving setup
-        self.image_save_folder = os.path.expanduser("home/beta/Desktop/RINS-TASK2/img")
+        self.image_save_folder = os.path.expanduser("~/Desktop/RINS-TASK2/img")
         os.makedirs(self.image_save_folder, exist_ok=True)
         self.bridge = CvBridge()
         self.latest_image = None
@@ -52,7 +52,15 @@ class ArmMoverAction(Node):
             self.image_callback,
             10
         )
-
+        
+        # Add a subscriber for bird name
+        self.bird_name = None
+        self.bird_name_sub = self.create_subscription(
+            String,
+            '/target_bird_name',
+            self.bird_name_callback,
+            10
+        )
         self.should_save_image = False
 
         # TF2 setup
@@ -90,6 +98,11 @@ class ArmMoverAction(Node):
         self.timer = self.create_timer(1.0, self.timer_callback)
 
         self.get_logger().info("Initialized the Arm Mover node! Waiting for commands...")
+
+    def bird_name_callback(self, msg):
+        """Store the bird name for image saving"""
+        self.bird_name = msg.data
+        self.get_logger().info(f"Received bird name: {self.bird_name}")
 
     def image_callback(self, msg):
         """Store the latest camera image"""
@@ -170,6 +183,7 @@ class ArmMoverAction(Node):
         if joint_positions is not None:
             self.current_command = f"manual:{joint_positions}"
             self.new_command_arrived = True
+            #self.save_camera_image()
         else:
             self.get_logger().error("Failed to calculate joint positions for target point")
 
@@ -234,17 +248,33 @@ class ArmMoverAction(Node):
         self.executing_command = False
 
     def save_camera_image(self):
-        """Save the current camera image to disk"""
+        """Save the current camera image to disk using bird name if available"""
         if self.latest_image is None:
             self.get_logger().warn("No image received yet, cannot save picture.")
             return
         try:
             cv_image = self.bridge.imgmsg_to_cv2(self.latest_image, desired_encoding='bgr8')
-            now = datetime.datetime.now()
-            filename = now.strftime("%Y-%m-%d_%H-%M-%S") + ".jpg"
+            
+            if self.bird_name:
+                # Use bird name in the filename
+                # Clean up bird name to make it suitable for a filename
+                clean_bird_name = self.bird_name
+                # clean_bird_name = self.bird_name.replace(" ", "_").replace(".", "").replace("/", "")
+                filename = f"{clean_bird_name}.jpg"  # Add timestamp to avoid overwrites
+                self.get_logger().info(f"Saving image with bird name: {clean_bird_name}")
+            else:
+                # Fallback to date-based filename
+                now = datetime.datetime.now()
+                filename = now.strftime("%Y-%m-%d_%H-%M-%S") + ".jpg"
+                self.get_logger().info(f"No bird name available, using date-based filename")
+                
             full_path = os.path.join(self.image_save_folder, filename)
             cv2.imwrite(full_path, cv_image)
             self.get_logger().info(f"Saved image as {full_path}")
+            
+            # Reset the bird name after saving the image
+            self.bird_name = None
+            
         except Exception as e:
             self.get_logger().error(f"Failed to save image: {e}")
 
@@ -283,6 +313,11 @@ class ArmMoverAction(Node):
                 # Format as manual command string
                 self.current_command = f"manual:{joint_positions}"
                 self.new_command_arrived = True
+
+                #if self.should_save_image:
+                #self.save_camera_image()
+                #    self.should_save_image = False  # Reset flag
+
                 return
 
             except Exception as e:

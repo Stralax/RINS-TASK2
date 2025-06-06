@@ -680,7 +680,7 @@ class RingDetector(Node):
             
             depth_image[depth_image==np.inf] = 0
 
-            depth_image[depth_image >= 3.1] = 0 # 3.0
+            depth_image[depth_image >= 3.13] = 0 # 3.0 # 3.15
 
             image_1 = depth_image / 65536.0 * 255
             if np.max(image_1) > 0:

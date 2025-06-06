@@ -599,7 +599,7 @@ class DetectFaces(Node):
 
                 self.publish_transform_data(transformed_center, transformed_normal)
                 # Say greeting when new face is detected
-                self.say_greeting()
+                # self.say_greeting()
             else:
                 # Update existing face
                 face_data = self.persistent_faces[matched_face_id]
